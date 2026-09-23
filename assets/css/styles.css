@@ -1,0 +1,136 @@
+/* OCA Holding Group LLC — Estilos base complementarios a Tailwind
+   -----------------------------------------------------------------
+   Tailwind (vía CDN) cubre la mayoría de las utilidades. Este archivo
+   solo contiene lo que Tailwind no resuelve limpiamente: fuentes,
+   animaciones de scroll-reveal, scrollbar y estados de transición. */
+
+:root {
+  --oca-navy: #0b1f3a;
+  --oca-navy-light: #142c52;
+  --oca-graphite: #2e2e33;
+  --oca-gold: #b8963e;
+  --oca-gold-light: #d9c088;
+  --oca-paper: #f7f5f1;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--oca-paper);
+  color: var(--oca-graphite);
+}
+
+.font-serif-display {
+  font-family: "Playfair Display", ui-serif, Georgia, serif;
+}
+
+/* Scrollbar discreto */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--oca-paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--oca-navy-light);
+  border-radius: 9999px;
+}
+
+/* Scroll-reveal: elementos con [data-reveal] inician ocultos y
+   main.js les agrega la clase .is-visible mediante IntersectionObserver */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+[data-reveal="fade"] {
+  transform: none;
+}
+
+/* Header con sombra al hacer scroll */
+#site-header {
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+#site-header.is-scrolled {
+  box-shadow: 0 8px 24px -12px rgba(11, 31, 58, 0.25);
+}
+
+/* Tarjetas de portafolio: leve elevación en hover */
+.oca-card {
+  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.oca-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px -20px rgba(11, 31, 58, 0.35);
+  border-color: var(--oca-gold);
+}
+
+/* Subrayado dorado animado para enlaces de navegación */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0%;
+  height: 2px;
+  background-color: var(--oca-gold);
+  transition: width 0.25s ease;
+}
+.nav-link:hover::after,
+.nav-link.is-active::after {
+  width: 100%;
+}
+
+/* Menú móvil */
+#mobile-menu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+#mobile-menu.is-open {
+  max-height: 640px;
+}
+
+/* Modal de ficha técnica del portafolio */
+.oca-modal-backdrop {
+  background-color: rgba(11, 31, 58, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+/* Estados de validación de formulario */
+.field-error-message {
+  display: none;
+}
+.field-invalid .field-error-message {
+  display: block;
+}
+.field-invalid input,
+.field-invalid textarea,
+.field-invalid select {
+  border-color: #c0392b !important;
+}
+
+/* Spinner de envío de formulario */
+.oca-spinner {
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 9999px;
+  width: 16px;
+  height: 16px;
+  animation: oca-spin 0.7s linear infinite;
+}
+@keyframes oca-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

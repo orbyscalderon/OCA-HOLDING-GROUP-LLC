@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-labelledby="oca-logo-title">
+  <!-- OCA Holding Group LLC — monograma de marca (v2, pulido final)
+       O = anillo exterior con bisel interior sutil · C = arco interior abierto ·
+       A/pluma = trazo diagonal con nervadura de pluma refinada, en degradado
+       metálico bronce-dorado con iluminación direccional (superior-izq a
+       inferior-der), simulando bronce cepillado. Vector a escala infinita:
+       usar este mismo archivo para header, footer y favicon. -->
+  <title id="oca-logo-title">OCA Holding Group LLC</title>
+  <defs>
+    <linearGradient id="oca-gold" x1="10%" y1="5%" x2="95%" y2="100%">
+      <stop offset="0%" stop-color="#F6E8C8"/>
+      <stop offset="22%" stop-color="#E0BC72"/>
+      <stop offset="50%" stop-color="#B8963E"/>
+      <stop offset="78%" stop-color="#8F6E2E"/>
+      <stop offset="100%" stop-color="#66491E"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="53" r="32" fill="none" stroke="url(#oca-gold)" stroke-width="7"/>
+  <circle cx="50" cy="53" r="27.3" fill="none" stroke="#F6E8C8" stroke-width="0.9" opacity="0.4"/>
+  <path d="M66.4,41.5 A20,20 0 1 1 66.4,64.5" fill="none" stroke="url(#oca-gold)" stroke-width="6" stroke-linecap="round"/>
+  <line x1="33" y1="81" x2="75.5" y2="16.5" stroke="url(#oca-gold)" stroke-width="7.5" stroke-linecap="round"/>
+  <path d="M75.5,16.5 C78,9.5 84,4.5 92.5,1.5 C88,7 83.5,11.5 80,15 C85,13.5 89.5,10.5 93,6 C89,14 81.5,19.5 75.5,16.5 Z" fill="url(#oca-gold)"/>
+</svg>

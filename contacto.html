@@ -1,0 +1,276 @@
+<!-- ==========================================================================
+     OCA HOLDING GROUP LLC — CONTACTO E INVERSIONISTAS
+     El formulario se valida en /assets/js/main.js (initContactForm) y está
+     listo para conectarse a un endpoint real (fetch a /api/contact).
+     Ver /backend/contact-api-node.js y /backend/contact_api_fastapi.py.
+     ========================================================================== -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contacto e Inversionistas | OCA Holding Group LLC</title>
+<meta name="description" content="Contacte al equipo de OCA Holding Group LLC para inversiones, prensa, alianzas estratégicas o consultas generales. Sede corporativa en Wilmington, Delaware, EE. UU.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.ocaholdinggroup.com/contacto.html">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OCA Holding Group LLC">
+<meta property="og:title" content="Contacto e Inversionistas | OCA Holding Group LLC">
+<meta property="og:description" content="Hable con nuestro equipo de Inversiones, Prensa, Alianzas o Consultas Generales.">
+<meta property="og:url" content="https://www.ocaholdinggroup.com/contacto.html">
+<meta property="og:image" content="https://www.ocaholdinggroup.com/assets/og/oca-og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:locale" content="es_ES">
+<meta property="og:locale:alternate" content="en_US">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Contacto e Inversionistas | OCA Holding Group LLC">
+<meta name="twitter:description" content="Hable con nuestro equipo de Inversiones, Prensa, Alianzas o Consultas Generales.">
+<meta name="twitter:image" content="https://www.ocaholdinggroup.com/assets/og/oca-og-image.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/img/logo-icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: { DEFAULT: "#0B1F3A", light: "#142C52" },
+          graphite: "#2E2E33",
+          gold: { DEFAULT: "#B8963E", light: "#D9C088" },
+          paper: "#F7F5F1"
+        },
+        fontFamily: {
+          sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+          serif: ["Playfair Display", "ui-serif", "Georgia", "serif"]
+        }
+      }
+    }
+  };
+</script>
+
+</head>
+
+<body data-page="contact" class="bg-paper text-graphite font-sans antialiased">
+
+  <!-- ============ HEADER ============ -->
+  <header id="site-header" class="sticky top-0 z-40 bg-paper/95 backdrop-blur border-b border-slate-200">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-20 items-center justify-between">
+        <a href="index.html" class="flex items-center gap-2.5">
+          <img src="assets/img/logo-icon.svg" alt="OCA Holding Group LLC" class="h-10 w-10">
+          <span class="font-serif text-lg font-semibold text-navy tracking-tight">OCA <span class="text-gold">Holding</span> Group</span>
+        </a>
+        <nav class="hidden lg:flex items-center gap-8">
+          <a href="index.html" data-nav-key="home" data-i18n="nav.home" class="nav-link text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
+          <a href="nosotros.html" data-nav-key="about" data-i18n="nav.about" class="nav-link text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
+          <a href="portafolio.html" data-nav-key="portfolio" data-i18n="nav.portfolio" class="nav-link text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
+          <a href="noticias.html" data-nav-key="news" data-i18n="nav.news" class="nav-link text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
+          <a href="contacto.html" data-nav-key="contact" data-i18n="nav.contact" class="nav-link is-active text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
+        </nav>
+        <div class="hidden lg:flex items-center gap-4">
+          <button type="button" data-lang-toggle class="flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-navy hover:border-gold hover:text-gold transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706A2.99 2.99 0 006 6.5c0 .552.448 1 1 1v-.5a1 1 0 011-1h1V4h-1a1 1 0 01-1-1V2.05a7.98 7.98 0 00-3.668 5.977zM10 16a6 6 0 004.746-2.324l-1.32-.66A1 1 0 0113 12v-.5A1.5 1.5 0 0011.5 10h-1a1 1 0 01-1-1v-.5A1.5 1.5 0 008 6.5h-.5A1.5 1.5 0 006 8v0a1.5 1.5 0 001.5 1.5H8a1 1 0 011 1V11a1 1 0 001 1v.5a1.5 1.5 0 001.5 1.5H11a1 1 0 011 1v.05A6.03 6.03 0 0110 16z" clip-rule="evenodd"/></svg>
+            <span data-lang-toggle-label></span>
+          </button>
+          <a href="contacto.html" data-i18n="nav.investors" class="rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
+        </div>
+        <button id="menu-toggle" type="button" aria-expanded="false" aria-label="Abrir menú" class="lg:hidden flex items-center justify-center rounded-md p-2 text-navy">
+          <svg data-icon-open xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <svg data-icon-close class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="mobile-menu" class="lg:hidden">
+        <nav class="flex flex-col gap-1 pb-6 pt-2 border-t border-slate-200">
+          <a href="index.html" data-nav-key="home" data-i18n="nav.home" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
+          <a href="nosotros.html" data-nav-key="about" data-i18n="nav.about" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
+          <a href="portafolio.html" data-nav-key="portfolio" data-i18n="nav.portfolio" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
+          <a href="noticias.html" data-nav-key="news" data-i18n="nav.news" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
+          <a href="contacto.html" data-nav-key="contact" data-i18n="nav.contact" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
+          <button type="button" data-lang-toggle class="mt-2 mx-3 flex items-center justify-center gap-1.5 rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-navy">
+            <span data-lang-toggle-label></span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <!-- ============ /HEADER ============ -->
+
+  <main>
+    <!-- HERO -->
+    <section class="bg-navy py-24">
+      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+        <span data-i18n="contact.heroEyebrow" class="inline-block rounded-full border border-gold/40 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-light mb-6"></span>
+        <h1 data-i18n="contact.heroTitle" class="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight text-white mb-6"></h1>
+        <p data-i18n="contact.heroText" class="text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto"></p>
+      </div>
+    </section>
+
+    <!-- FORMULARIO + SEDE -->
+    <section class="py-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-1 gap-12 lg:grid-cols-5">
+
+        <!-- FORMULARIO -->
+        <div class="lg:col-span-3 rounded-xl border border-slate-200 bg-white p-8 sm:p-10" data-reveal>
+          <h2 data-i18n="contact.formTitle" class="font-serif text-2xl font-semibold text-navy mb-2"></h2>
+          <p data-i18n="contact.formSubtitle" class="text-sm text-slate-500 mb-8"></p>
+
+          <!-- Mensaje de éxito (oculto por defecto, mostrado por main.js tras envío) -->
+          <div id="form-success" class="hidden rounded-lg bg-green-50 border border-green-200 p-6 text-center">
+            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 data-i18n="contact.successTitle" class="font-serif text-lg font-semibold text-green-800 mb-1"></h3>
+            <p data-i18n="contact.successText" class="text-sm text-green-700"></p>
+          </div>
+
+          <!-- CMS/Backend: action/method quedan de referencia; el envío real
+               lo maneja JS (fetch) en main.js -> initContactForm() -->
+          <form id="contact-form" novalidate class="space-y-6">
+
+            <div data-field>
+              <label for="department" data-i18n="contact.labelDepartment" class="block text-sm font-medium text-navy mb-1.5"></label>
+              <select id="department" name="department" required class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+                <option value="general" data-i18n="contact.deptGeneral"></option>
+                <option value="investments" data-i18n="contact.deptInvestments"></option>
+                <option value="press" data-i18n="contact.deptPress"></option>
+                <option value="partnerships" data-i18n="contact.deptPartnerships"></option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div data-field>
+                <label for="fullName" data-i18n="contact.labelFullName" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <input type="text" id="fullName" name="fullName" required minlength="2" data-i18n-placeholder="contact.placeholderFullName" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+                <p class="field-error-message mt-1.5 text-xs text-red-600" data-i18n="contact.errorRequired"></p>
+              </div>
+              <div data-field>
+                <label for="email" data-i18n="contact.labelEmail" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <input type="email" id="email" name="email" required data-i18n-placeholder="contact.placeholderEmail" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+                <p class="field-error-message mt-1.5 text-xs text-red-600" data-i18n="contact.errorEmail"></p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div data-field>
+                <label for="company" data-i18n="contact.labelCompany" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <input type="text" id="company" name="company" data-i18n-placeholder="contact.placeholderCompany" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+              </div>
+              <div data-field>
+                <label for="phone" data-i18n="contact.labelPhone" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <input type="tel" id="phone" name="phone" data-i18n-placeholder="contact.placeholderPhone" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+              </div>
+            </div>
+
+            <div data-field>
+              <label for="message" data-i18n="contact.labelMessage" class="block text-sm font-medium text-navy mb-1.5"></label>
+              <textarea id="message" name="message" rows="5" required minlength="10" data-i18n-placeholder="contact.placeholderMessage" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none"></textarea>
+              <p class="field-error-message mt-1.5 text-xs text-red-600" data-i18n="contact.errorRequired"></p>
+            </div>
+
+            <button type="submit" data-submit-button data-i18n="contact.submitButton" class="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-navy px-8 py-3.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></button>
+          </form>
+        </div>
+
+        <!-- SEDE / OFICINAS -->
+        <div class="lg:col-span-2 space-y-8">
+          <div class="rounded-xl border border-slate-200 bg-white p-8" data-reveal>
+            <span data-i18n="contact.hqEyebrow" class="text-xs font-semibold uppercase tracking-widest text-gold"></span>
+            <h3 data-i18n="contact.hqTitle" class="mt-2 font-serif text-lg font-semibold text-navy mb-4"></h3>
+            <ul class="space-y-3 text-sm text-slate-600">
+              <li class="flex items-start gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+                <span data-i18n="contact.hqAddress"></span>
+              </li>
+              <li class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h1.5a1.5 1.5 0 001.5-1.5v-2.25a1.5 1.5 0 00-1.5-1.5h-2.25a1.5 1.5 0 00-1.5 1.5v.75c-3.75-.75-6.75-3.75-7.5-7.5h.75a1.5 1.5 0 001.5-1.5V6.75a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5z"/></svg>
+                <span data-i18n="contact.hqPhone"></span>
+              </li>
+              <li class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                <span data-i18n="contact.hqEmail"></span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-white p-8" data-reveal>
+            <span data-i18n="contact.subsidiariesEyebrow" class="text-xs font-semibold uppercase tracking-widest text-gold"></span>
+            <h3 data-i18n="contact.subsidiariesTitle" class="mt-2 font-serif text-lg font-semibold text-navy mb-4"></h3>
+            <!-- CMS: reemplazar por listado dinámico de oficinas regionales -->
+            <ul class="space-y-3 text-sm text-slate-600">
+              <li class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <span>Ciudad de México, México</span>
+                <span class="text-xs text-slate-400">LATAM HQ</span>
+              </li>
+              <li class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <span>Madrid, España</span>
+                <span class="text-xs text-slate-400">EMEA HQ</span>
+              </li>
+              <li class="flex items-center justify-between">
+                <span>Miami, FL, Estados Unidos</span>
+                <span class="text-xs text-slate-400">Regional Office</span>
+              </li>
+            </ul>
+            <div class="mt-6 pt-6 border-t border-slate-100 space-y-1">
+              <p class="text-xs text-slate-400"><span data-i18n="contact.investorEmailLabel"></span>: investors@ocaholdinggroup.com</p>
+              <p class="text-xs text-slate-400"><span data-i18n="contact.pressEmailLabel"></span>: press@ocaholdinggroup.com</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="bg-navy text-white">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+      <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-2 mb-4">
+            <img src="assets/img/logo-icon.svg" alt="OCA Holding Group LLC" class="h-10 w-10">
+            <span class="font-serif text-lg font-semibold">OCA <span class="text-gold-light">Holding</span> Group</span>
+          </div>
+          <p data-i18n="footer.tagline" class="text-sm text-slate-300 max-w-sm leading-relaxed"></p>
+        </div>
+        <div>
+          <h4 data-i18n="footer.quickLinksTitle" class="text-sm font-semibold uppercase tracking-wide text-gold-light mb-4"></h4>
+          <ul class="space-y-2 text-sm text-slate-300">
+            <li><a href="index.html" data-i18n="nav.home" class="hover:text-white"></a></li>
+            <li><a href="nosotros.html" data-i18n="nav.about" class="hover:text-white"></a></li>
+            <li><a href="portafolio.html" data-i18n="nav.portfolio" class="hover:text-white"></a></li>
+            <li><a href="noticias.html" data-i18n="nav.news" class="hover:text-white"></a></li>
+            <li><a href="contacto.html" data-i18n="nav.contact" class="hover:text-white"></a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footer.legalTitle" class="text-sm font-semibold uppercase tracking-wide text-gold-light mb-4"></h4>
+          <ul class="space-y-2 text-sm text-slate-300">
+            <li><a href="terminos.html" data-i18n="footer.termsLink" class="hover:text-white"></a></li>
+            <li><a href="privacidad.html" data-i18n="footer.privacyLink" class="hover:text-white"></a></li>
+          </ul>
+          <h4 data-i18n="footer.contactTitle" class="text-sm font-semibold uppercase tracking-wide text-gold-light mt-6 mb-2"></h4>
+          <p class="text-sm text-slate-300">info@ocaholdinggroup.com</p>
+        </div>
+      </div>
+      <div class="mt-12 border-t border-white/10 pt-8">
+        <p data-i18n="footer.registeredNote" class="text-xs text-slate-400 leading-relaxed max-w-4xl"></p>
+        <p class="mt-4 text-xs text-slate-400">&copy; <span data-current-year></span> OCA Holding Group LLC. <span data-i18n="footer.rightsReserved"></span></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/translations.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
