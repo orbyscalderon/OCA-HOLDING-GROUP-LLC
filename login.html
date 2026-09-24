@@ -1,35 +1,19 @@
 <!-- ==========================================================================
-     OCA HOLDING GROUP LLC — NOTICIAS Y COMUNICADOS (MEDIA & INSIGHTS)
-     Las entradas se generan dinámicamente en /assets/js/main.js desde
-     /assets/js/data.js (OCA_DATA.news). Para producción: sustituir por
-     fetch('/api/news') consultando una tabla `news_posts` en el backend.
+     OCA HOLDING GROUP LLC — PORTAL DE CLIENTES: INICIO DE SESIÓN
+     Autenticación vía Supabase Auth (ver assets/js/supabase-config.js para
+     la URL/anon key del proyecto). No requiere backend propio: supabase-js
+     habla directamente con Supabase, protegido por Row Level Security
+     (ver backend/schema.sql). Tras iniciar sesión, redirige a dashboard.html.
      ========================================================================== -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Noticias y Comunicados | OCA Holding Group LLC</title>
-<meta name="description" content="Comunicados de prensa, adquisiciones e hitos corporativos de OCA Holding Group LLC y sus empresas filiales.">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://www.ocaholdinggroup.com/noticias.html">
-
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="OCA Holding Group LLC">
-<meta property="og:title" content="Noticias y Comunicados | OCA Holding Group LLC">
-<meta property="og:description" content="Comunicados de prensa, adquisiciones e hitos corporativos de OCA Holding Group LLC.">
-<meta property="og:url" content="https://www.ocaholdinggroup.com/noticias.html">
-<meta property="og:image" content="https://www.ocaholdinggroup.com/assets/og/oca-og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:type" content="image/png">
-<meta property="og:locale" content="es_ES">
-<meta property="og:locale:alternate" content="en_US">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Noticias y Comunicados | OCA Holding Group LLC">
-<meta name="twitter:description" content="Comunicados de prensa, adquisiciones e hitos corporativos del grupo.">
-<meta name="twitter:image" content="https://www.ocaholdinggroup.com/assets/og/oca-og-image.png">
+<title>Portal de Clientes | OCA Holding Group LLC</title>
+<meta name="description" content="Inicia sesión en el portal de clientes de OCA Holding Group LLC para ver el estado de tu proyecto y tus facturas.">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://www.ocaholdinggroup.com/login.html">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,9 +43,12 @@
   };
 </script>
 
+<!-- Cliente de Supabase (Auth + Postgres vía RLS) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 </head>
 
-<body data-page="news" class="bg-paper text-graphite font-sans antialiased">
+<body data-page="login" class="bg-paper text-graphite font-sans antialiased">
 
   <!-- ============ HEADER ============ -->
   <header id="site-header" class="sticky top-0 z-40 bg-paper/95 backdrop-blur border-b border-slate-200">
@@ -75,15 +62,13 @@
           <a href="index.html" data-nav-key="home" data-i18n="nav.home" class="nav-link text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
           <a href="nosotros.html" data-nav-key="about" data-i18n="nav.about" class="nav-link text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
           <a href="portafolio.html" data-nav-key="portfolio" data-i18n="nav.portfolio" class="nav-link text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
-          <a href="noticias.html" data-nav-key="news" data-i18n="nav.news" class="nav-link is-active text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
+          <a href="noticias.html" data-nav-key="news" data-i18n="nav.news" class="nav-link text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
           <a href="contacto.html" data-nav-key="contact" data-i18n="nav.contact" class="nav-link text-sm font-medium text-graphite hover:text-navy transition-colors"></a>
         </nav>
         <div class="hidden lg:flex items-center gap-4">
           <button type="button" data-lang-toggle class="flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-navy hover:border-gold hover:text-gold transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706A2.99 2.99 0 006 6.5c0 .552.448 1 1 1v-.5a1 1 0 011-1h1V4h-1a1 1 0 01-1-1V2.05a7.98 7.98 0 00-3.668 5.977zM10 16a6 6 0 004.746-2.324l-1.32-.66A1 1 0 0113 12v-.5A1.5 1.5 0 0011.5 10h-1a1 1 0 01-1-1v-.5A1.5 1.5 0 008 6.5h-.5A1.5 1.5 0 006 8v0a1.5 1.5 0 001.5 1.5H8a1 1 0 011 1V11a1 1 0 001 1v.5a1.5 1.5 0 001.5 1.5H11a1 1 0 011 1v.05A6.03 6.03 0 0110 16z" clip-rule="evenodd"/></svg>
             <span data-lang-toggle-label></span>
           </button>
-          <a href="login.html" data-i18n="nav.clientPortal" class="text-sm font-medium text-graphite hover:text-navy transition-colors mr-1"></a>
           <a href="contacto.html" data-i18n="nav.investors" class="rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
         </div>
         <button id="menu-toggle" type="button" aria-expanded="false" aria-label="Abrir menú" class="lg:hidden flex items-center justify-center rounded-md p-2 text-navy">
@@ -98,7 +83,6 @@
           <a href="portafolio.html" data-nav-key="portfolio" data-i18n="nav.portfolio" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
           <a href="noticias.html" data-nav-key="news" data-i18n="nav.news" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
           <a href="contacto.html" data-nav-key="contact" data-i18n="nav.contact" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
-          <a href="login.html" data-i18n="nav.clientPortal" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
           <button type="button" data-lang-toggle class="mt-2 mx-3 flex items-center justify-center gap-1.5 rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-navy">
             <span data-lang-toggle-label></span>
           </button>
@@ -109,45 +93,69 @@
   <!-- ============ /HEADER ============ -->
 
   <main>
-    <!-- HERO -->
-    <section class="bg-navy py-24">
+    <section class="bg-navy py-20">
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-        <span data-i18n="news.heroEyebrow" class="inline-block rounded-full border border-gold/40 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-light mb-6"></span>
-        <h1 data-i18n="news.heroTitle" class="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight text-white mb-6"></h1>
-        <p data-i18n="news.heroText" class="text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto"></p>
+        <span data-i18n="login.heroEyebrow" class="inline-block rounded-full border border-gold/40 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-gold-light mb-6"></span>
+        <h1 data-i18n="login.heroTitle" class="font-serif text-3xl sm:text-4xl font-semibold leading-tight text-white mb-4"></h1>
+        <p data-i18n="login.heroText" class="text-base text-slate-300 leading-relaxed max-w-xl mx-auto"></p>
       </div>
     </section>
 
-    <!-- FILTROS + LISTA -->
     <section class="py-20">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap gap-3 justify-center mb-14" data-reveal="fade">
-          <button type="button" data-category-filter="all" class="rounded-full bg-navy text-white px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="news.filterAll"></button>
-          <button type="button" data-category-filter="press" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="news.cat_press"></button>
-          <button type="button" data-category-filter="acquisition" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="news.cat_acquisition"></button>
-          <button type="button" data-category-filter="milestone" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="news.cat_milestone"></button>
+      <div class="mx-auto max-w-md px-4 sm:px-6 lg:px-8">
+
+        <!-- Aviso si assets/js/supabase-config.js sigue con valores placeholder -->
+        <div id="config-warning" class="hidden rounded-lg border border-amber-300 bg-amber-50 p-5 text-sm text-amber-800 mb-6">
+          <span data-i18n="login.errorConfigMissing"></span>
         </div>
 
-        <!-- Lista renderizada dinámicamente por main.js desde window.OCA_DATA.news -->
-        <div id="news-list" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <div class="rounded-xl border border-slate-200 bg-white p-8 sm:p-10">
+          <!-- Tabs -->
+          <div class="flex rounded-full bg-paper p-1 mb-8">
+            <button type="button" data-tab="signin" data-i18n="login.tabSignIn" class="flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors"></button>
+            <button type="button" data-tab="signup" data-i18n="login.tabSignUp" class="flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors"></button>
+          </div>
+
+          <div id="form-message" class="hidden rounded-lg p-4 text-sm mb-6"></div>
+
+          <!-- FORMULARIO: INICIAR SESIÓN -->
+          <form id="signin-form" class="space-y-5">
+            <div data-field>
+              <label for="signin-email" data-i18n="login.labelEmail" class="block text-sm font-medium text-navy mb-1.5"></label>
+              <input type="email" id="signin-email" name="email" required data-i18n-placeholder="login.placeholderEmail" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+            </div>
+            <div data-field>
+              <label for="signin-password" data-i18n="login.labelPassword" class="block text-sm font-medium text-navy mb-1.5"></label>
+              <input type="password" id="signin-password" name="password" required minlength="6" data-i18n-placeholder="login.placeholderPassword" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+            </div>
+            <button type="submit" data-submit-button data-i18n="login.submitSignIn" class="w-full inline-flex items-center justify-center rounded-full bg-navy px-8 py-3.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></button>
+            <button type="button" id="forgot-password-link" data-i18n="login.forgotPassword" class="block w-full text-center text-xs font-medium text-slate-500 hover:text-navy transition-colors"></button>
+          </form>
+
+          <!-- FORMULARIO: CREAR CUENTA -->
+          <form id="signup-form" class="space-y-5 hidden">
+            <div data-field>
+              <label for="signup-name" data-i18n="login.labelFullName" class="block text-sm font-medium text-navy mb-1.5"></label>
+              <input type="text" id="signup-name" name="fullName" required minlength="2" data-i18n-placeholder="login.placeholderFullName" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+            </div>
+            <div data-field>
+              <label for="signup-company" data-i18n="login.labelCompany" class="block text-sm font-medium text-navy mb-1.5"></label>
+              <input type="text" id="signup-company" name="company" data-i18n-placeholder="login.placeholderCompany" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+            </div>
+            <div data-field>
+              <label for="signup-email" data-i18n="login.labelEmail" class="block text-sm font-medium text-navy mb-1.5"></label>
+              <input type="email" id="signup-email" name="email" required data-i18n-placeholder="login.placeholderEmail" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+            </div>
+            <div data-field>
+              <label for="signup-password" data-i18n="login.labelPassword" class="block text-sm font-medium text-navy mb-1.5"></label>
+              <input type="password" id="signup-password" name="password" required minlength="6" data-i18n-placeholder="login.placeholderPassword" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+            </div>
+            <button type="submit" data-submit-button data-i18n="login.submitSignUp" class="w-full inline-flex items-center justify-center rounded-full bg-navy px-8 py-3.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></button>
+          </form>
+        </div>
       </div>
     </section>
   </main>
-
-  <!-- ============ MODAL: DETALLE DE NOTICIA ============ -->
-  <div id="news-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 oca-modal-backdrop">
-    <div class="relative w-full max-w-2xl rounded-xl bg-white p-8 sm:p-10 shadow-2xl max-h-[85vh] overflow-y-auto">
-      <button type="button" data-modal-close aria-label="Cerrar" class="absolute right-4 top-4 text-slate-400 hover:text-navy">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-      <div class="flex items-center gap-3 mb-4">
-        <span data-modal-news-category class="inline-block rounded-full bg-paper px-3 py-1 text-xs font-medium uppercase tracking-wide text-navy"></span>
-        <time data-modal-news-date class="text-xs text-slate-500"></time>
-      </div>
-      <h3 data-modal-news-title class="font-serif text-2xl font-semibold text-navy mb-5"></h3>
-      <p data-modal-news-body class="text-sm text-slate-600 leading-relaxed"></p>
-    </div>
-  </div>
 
   <!-- ============ FOOTER ============ -->
   <footer class="bg-navy text-white">
@@ -188,7 +196,8 @@
   </footer>
 
   <script src="assets/js/translations.js"></script>
-  <script src="assets/js/data.js"></script>
+  <script src="assets/js/supabase-config.js"></script>
   <script src="assets/js/main.js"></script>
+  <script src="assets/js/auth.js"></script>
 </body>
 </html>

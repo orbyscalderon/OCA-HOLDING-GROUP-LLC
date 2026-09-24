@@ -83,6 +83,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706A2.99 2.99 0 006 6.5c0 .552.448 1 1 1v-.5a1 1 0 011-1h1V4h-1a1 1 0 01-1-1V2.05a7.98 7.98 0 00-3.668 5.977zM10 16a6 6 0 004.746-2.324l-1.32-.66A1 1 0 0113 12v-.5A1.5 1.5 0 0011.5 10h-1a1 1 0 01-1-1v-.5A1.5 1.5 0 008 6.5h-.5A1.5 1.5 0 006 8v0a1.5 1.5 0 001.5 1.5H8a1 1 0 011 1V11a1 1 0 001 1v.5a1.5 1.5 0 001.5 1.5H11a1 1 0 011 1v.05A6.03 6.03 0 0110 16z" clip-rule="evenodd"/></svg>
             <span data-lang-toggle-label></span>
           </button>
+          <a href="login.html" data-i18n="nav.clientPortal" class="text-sm font-medium text-graphite hover:text-navy transition-colors mr-1"></a>
           <a href="contacto.html" data-i18n="nav.investors" class="rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
         </div>
         <button id="menu-toggle" type="button" aria-expanded="false" aria-label="Abrir menú" class="lg:hidden flex items-center justify-center rounded-md p-2 text-navy">
@@ -97,6 +98,7 @@
           <a href="portafolio.html" data-nav-key="portfolio" data-i18n="nav.portfolio" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
           <a href="noticias.html" data-nav-key="news" data-i18n="nav.news" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
           <a href="contacto.html" data-nav-key="contact" data-i18n="nav.contact" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
+          <a href="login.html" data-i18n="nav.clientPortal" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
           <button type="button" data-lang-toggle class="mt-2 mx-3 flex items-center justify-center gap-1.5 rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-navy">
             <span data-lang-toggle-label></span>
           </button>
@@ -145,6 +147,7 @@
                 <option value="investments" data-i18n="contact.deptInvestments"></option>
                 <option value="press" data-i18n="contact.deptPress"></option>
                 <option value="partnerships" data-i18n="contact.deptPartnerships"></option>
+                <option value="quote" data-i18n="contact.deptQuote"></option>
               </select>
             </div>
 
@@ -169,6 +172,80 @@
               <div data-field>
                 <label for="phone" data-i18n="contact.labelPhone" class="block text-sm font-medium text-navy mb-1.5"></label>
                 <input type="tel" id="phone" name="phone" data-i18n-placeholder="contact.placeholderPhone" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+              </div>
+            </div>
+
+            <!-- Brief de proyecto: oculto por defecto, se revela cuando el
+                 departamento seleccionado es "quote" (ver main.js -> toggleQuoteFields) -->
+            <div id="quote-fields" hidden class="space-y-6 rounded-lg border border-gold/30 bg-paper/70 p-6">
+              <div>
+                <h3 data-i18n="contact.quoteSectionTitle" class="font-serif text-base font-semibold text-navy mb-1"></h3>
+                <p data-i18n="contact.quoteSectionSubtitle" class="text-xs text-slate-500"></p>
+              </div>
+
+              <div data-field>
+                <label for="projectType" data-i18n="contact.labelProjectType" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <select id="projectType" name="projectType" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+                  <option value="website" data-i18n="contact.projectTypeWebsite"></option>
+                  <option value="webapp" data-i18n="contact.projectTypeWebApp"></option>
+                  <option value="mobileapp" data-i18n="contact.projectTypeMobileApp"></option>
+                  <option value="ecommerce" data-i18n="contact.projectTypeEcommerce"></option>
+                  <option value="software" data-i18n="contact.projectTypeSoftware"></option>
+                  <option value="branding" data-i18n="contact.projectTypeBranding"></option>
+                  <option value="other" data-i18n="contact.projectTypeOther"></option>
+                </select>
+              </div>
+
+              <div data-field>
+                <label for="projectDescription" data-i18n="contact.labelProjectDescription" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <textarea id="projectDescription" name="projectDescription" rows="4" minlength="20" data-i18n-placeholder="contact.placeholderProjectDescription" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none"></textarea>
+                <p class="field-error-message mt-1.5 text-xs text-red-600" data-i18n="contact.errorRequired"></p>
+              </div>
+
+              <div data-field>
+                <label for="keyFeatures" data-i18n="contact.labelKeyFeatures" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <textarea id="keyFeatures" name="keyFeatures" rows="3" data-i18n-placeholder="contact.placeholderKeyFeatures" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none"></textarea>
+              </div>
+
+              <div data-field>
+                <label for="targetAudience" data-i18n="contact.labelTargetAudience" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <input type="text" id="targetAudience" name="targetAudience" data-i18n-placeholder="contact.placeholderTargetAudience" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+              </div>
+
+              <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div data-field>
+                  <label for="budget" data-i18n="contact.labelBudget" class="block text-sm font-medium text-navy mb-1.5"></label>
+                  <select id="budget" name="budget" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+                    <option value="under5k" data-i18n="contact.budgetUnder5k"></option>
+                    <option value="5to15k" data-i18n="contact.budget5to15k"></option>
+                    <option value="15to50k" data-i18n="contact.budget15to50k"></option>
+                    <option value="over50k" data-i18n="contact.budgetOver50k"></option>
+                    <option value="tbd" selected data-i18n="contact.budgetTbd"></option>
+                  </select>
+                </div>
+                <div data-field>
+                  <label for="timeline" data-i18n="contact.labelTimeline" class="block text-sm font-medium text-navy mb-1.5"></label>
+                  <select id="timeline" name="timeline" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+                    <option value="urgent" data-i18n="contact.timelineUrgent"></option>
+                    <option value="1to3" data-i18n="contact.timeline1to3"></option>
+                    <option value="3to6" data-i18n="contact.timeline3to6"></option>
+                    <option value="flexible" selected data-i18n="contact.timelineFlexible"></option>
+                  </select>
+                </div>
+              </div>
+
+              <div data-field>
+                <label for="hasExistingBrand" data-i18n="contact.labelHasExistingBrand" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <select id="hasExistingBrand" name="hasExistingBrand" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+                  <option value="yes" data-i18n="contact.hasExistingBrandYes"></option>
+                  <option value="no" data-i18n="contact.hasExistingBrandNo"></option>
+                  <option value="partial" data-i18n="contact.hasExistingBrandPartial"></option>
+                </select>
+              </div>
+
+              <div data-field>
+                <label for="references" data-i18n="contact.labelReferences" class="block text-sm font-medium text-navy mb-1.5"></label>
+                <input type="text" id="references" name="references" data-i18n-placeholder="contact.placeholderReferences" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
               </div>
             </div>
 

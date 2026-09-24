@@ -362,6 +362,32 @@
 
     const successBox = document.getElementById("form-success");
     const submitBtn = form.querySelector("[data-submit-button]");
+    const quoteFields = document.getElementById("quote-fields");
+    const projectDescription = document.getElementById("projectDescription");
+
+    // Revela el brief de proyecto solo cuando el departamento es "quote", y
+    // exige la descripción del proyecto únicamente en ese caso (para no
+    // bloquear el envío de otros tipos de consulta con campos ocultos).
+    function toggleQuoteFields(isQuote) {
+      if (!quoteFields) return;
+      quoteFields.hidden = !isQuote;
+      if (projectDescription) {
+        if (isQuote) projectDescription.setAttribute("required", "required");
+        else projectDescription.removeAttribute("required");
+      }
+    }
+
+    if (form.department) {
+      form.department.addEventListener("change", () => toggleQuoteFields(form.department.value === "quote"));
+
+      // Permite enlazar directamente a la solicitud de cotización, ej.
+      // contacto.html?dept=quote (usado por los CTAs de Portafolio/Home)
+      const requestedDept = new URLSearchParams(window.location.search).get("dept");
+      if (requestedDept && Array.from(form.department.options).some((o) => o.value === requestedDept)) {
+        form.department.value = requestedDept;
+      }
+      toggleQuoteFields(form.department.value === "quote");
+    }
 
     function setFieldError(field, hasError) {
       const wrapper = field.closest("[data-field]");
@@ -392,13 +418,27 @@
       const isValid = fields.map(validateField).every(Boolean);
       if (!isValid) return;
 
+      const isQuoteRequest = form.department.value === "quote";
       const payload = {
         fullName: form.fullName.value.trim(),
         email: form.email.value.trim(),
         company: form.company ? form.company.value.trim() : "",
         phone: form.phone ? form.phone.value.trim() : "",
         department: form.department.value,
-        message: form.message.value.trim()
+        message: form.message.value.trim(),
+        // Brief de proyecto: solo se envía cuando el departamento es "quote"
+        project: isQuoteRequest
+          ? {
+              type: form.projectType.value,
+              description: form.projectDescription.value.trim(),
+              keyFeatures: form.keyFeatures.value.trim(),
+              targetAudience: form.targetAudience.value.trim(),
+              budget: form.budget.value,
+              timeline: form.timeline.value,
+              hasExistingBrand: form.hasExistingBrand.value,
+              references: form.references.value.trim()
+            }
+          : null
       };
 
       submitBtn.disabled = true;

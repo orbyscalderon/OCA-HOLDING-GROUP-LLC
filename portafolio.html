@@ -101,6 +101,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706A2.99 2.99 0 006 6.5c0 .552.448 1 1 1v-.5a1 1 0 011-1h1V4h-1a1 1 0 01-1-1V2.05a7.98 7.98 0 00-3.668 5.977zM10 16a6 6 0 004.746-2.324l-1.32-.66A1 1 0 0113 12v-.5A1.5 1.5 0 0011.5 10h-1a1 1 0 01-1-1v-.5A1.5 1.5 0 008 6.5h-.5A1.5 1.5 0 006 8v0a1.5 1.5 0 001.5 1.5H8a1 1 0 011 1V11a1 1 0 001 1v.5a1.5 1.5 0 001.5 1.5H11a1 1 0 011 1v.05A6.03 6.03 0 0110 16z" clip-rule="evenodd"/></svg>
             <span data-lang-toggle-label></span>
           </button>
+          <a href="login.html" data-i18n="nav.clientPortal" class="text-sm font-medium text-graphite hover:text-navy transition-colors mr-1"></a>
           <a href="contacto.html" data-i18n="nav.investors" class="rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
         </div>
         <button id="menu-toggle" type="button" aria-expanded="false" aria-label="Abrir menú" class="lg:hidden flex items-center justify-center rounded-md p-2 text-navy">
@@ -115,6 +116,7 @@
           <a href="portafolio.html" data-nav-key="portfolio" data-i18n="nav.portfolio" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
           <a href="noticias.html" data-nav-key="news" data-i18n="nav.news" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
           <a href="contacto.html" data-nav-key="contact" data-i18n="nav.contact" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
+          <a href="login.html" data-i18n="nav.clientPortal" class="rounded-md px-3 py-2.5 text-sm font-medium text-graphite hover:bg-white"></a>
           <button type="button" data-lang-toggle class="mt-2 mx-3 flex items-center justify-center gap-1.5 rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-navy">
             <span data-lang-toggle-label></span>
           </button>
@@ -149,6 +151,15 @@
 
         <!-- Grid renderizado dinámicamente por main.js desde window.OCA_DATA.companies -->
         <div id="portfolio-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+    </section>
+
+    <!-- CTA: SOLICITAR COTIZACIÓN -->
+    <section class="bg-navy py-20">
+      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center" data-reveal>
+        <h2 data-i18n="portfolio.ctaQuoteTitle" class="font-serif text-3xl sm:text-4xl font-semibold text-white"></h2>
+        <p data-i18n="portfolio.ctaQuoteText" class="mt-4 text-base text-slate-300"></p>
+        <a href="contacto.html?dept=quote" data-i18n="portfolio.ctaQuoteButton" class="mt-8 inline-flex items-center justify-center rounded-full bg-gold px-8 py-3.5 text-sm font-semibold text-navy hover:bg-gold-light transition-colors"></a>
       </div>
     </section>
   </main>

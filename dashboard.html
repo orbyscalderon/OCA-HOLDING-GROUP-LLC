@@ -1,0 +1,129 @@
+<!-- ==========================================================================
+     OCA HOLDING GROUP LLC — PORTAL DE CLIENTES: PANEL
+     Página protegida: assets/js/dashboard.js verifica la sesión de Supabase
+     al cargar y redirige a login.html si no hay sesión activa. Los datos
+     (proyectos, avances, facturas) se leen directamente de Supabase desde
+     el navegador — Row Level Security garantiza que cada cliente solo vea
+     lo suyo (ver backend/schema.sql). Pagar una factura llama al backend
+     (/api/create-checkout-session) para generar el link de Stripe.
+     ========================================================================== -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Panel | OCA Holding Group LLC</title>
+<meta name="description" content="Panel de cliente de OCA Holding Group LLC: estado de tu proyecto, bitácora de avances y facturas.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://www.ocaholdinggroup.com/dashboard.html">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/img/logo-icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: { DEFAULT: "#0B1F3A", light: "#142C52" },
+          graphite: "#2E2E33",
+          gold: { DEFAULT: "#B8963E", light: "#D9C088" },
+          paper: "#F7F5F1"
+        },
+        fontFamily: {
+          sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+          serif: ["Playfair Display", "ui-serif", "Georgia", "serif"]
+        }
+      }
+    }
+  };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+<style>
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+  .status-brief_received { background: #EEF2F7; color: #445069; }
+  .status-in_design { background: #FDF2E9; color: #B8963E; }
+  .status-in_development { background: #E8F0FE; color: #1D4ED8; }
+  .status-in_review { background: #FEF3C7; color: #92400E; }
+  .status-delivered { background: #DCFCE7; color: #166534; }
+  .status-on_hold { background: #F1F1EF; color: #6B6B62; }
+  .timeline-item { position: relative; padding-left: 28px; padding-bottom: 24px; }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item::before { content: ""; position: absolute; left: 4px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--oca-gold, #B8963E); }
+  .timeline-item::after { content: ""; position: absolute; left: 8px; top: 16px; bottom: 0; width: 1px; background: #E4E0D6; }
+  .timeline-item:last-child::after { display: none; }
+</style>
+
+</head>
+
+<body data-page="dashboard" class="bg-paper text-graphite font-sans antialiased">
+
+  <!-- ============ HEADER ============ -->
+  <header id="site-header" class="sticky top-0 z-40 bg-paper/95 backdrop-blur border-b border-slate-200">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-20 items-center justify-between">
+        <a href="index.html" class="flex items-center gap-2.5">
+          <img src="assets/img/logo-icon.svg" alt="OCA Holding Group LLC" class="h-10 w-10">
+          <span class="font-serif text-lg font-semibold text-navy tracking-tight">OCA <span class="text-gold">Holding</span> Group</span>
+        </a>
+        <div class="flex items-center gap-4">
+          <button type="button" data-lang-toggle class="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-navy hover:border-gold hover:text-gold transition-colors">
+            <span data-lang-toggle-label></span>
+          </button>
+          <button type="button" id="sign-out-button" data-i18n="dashboard.signOut" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-navy hover:border-navy transition-colors"></button>
+        </div>
+      </div>
+    </div>
+  </header>
+  <!-- ============ /HEADER ============ -->
+
+  <main class="py-16">
+    <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+
+      <!-- Aviso si Supabase aún no está configurado -->
+      <div id="config-warning" class="hidden rounded-lg border border-amber-300 bg-amber-50 p-6 text-center">
+        <h2 data-i18n="dashboard.configMissingTitle" class="font-serif text-lg font-semibold text-amber-900 mb-1"></h2>
+        <p data-i18n="dashboard.configMissingText" class="text-sm text-amber-800"></p>
+      </div>
+
+      <div id="dashboard-content" class="hidden">
+        <!-- Banners de resultado de pago (Stripe redirige aquí con ?payment=success|canceled) -->
+        <div id="payment-success-banner" class="hidden rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-700 mb-8"></div>
+        <div id="payment-canceled-banner" class="hidden rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-700 mb-8"></div>
+
+        <div class="mb-10">
+          <p class="text-xs font-semibold uppercase tracking-widest text-gold mb-1" data-i18n="dashboard.welcomeBack"></p>
+          <h1 id="client-name" class="font-serif text-2xl sm:text-3xl font-semibold text-navy"></h1>
+        </div>
+
+        <!-- PROYECTOS -->
+        <section class="mb-14">
+          <h2 data-i18n="dashboard.projectsTitle" class="font-serif text-xl font-semibold text-navy mb-6"></h2>
+          <p id="no-projects" data-i18n="dashboard.noProjects" class="hidden text-sm text-slate-500 rounded-lg border border-slate-200 bg-white p-6"></p>
+          <div id="projects-list" class="space-y-6"></div>
+        </section>
+
+        <!-- FACTURAS -->
+        <section>
+          <h2 data-i18n="dashboard.invoicesTitle" class="font-serif text-xl font-semibold text-navy mb-6"></h2>
+          <p id="no-invoices" data-i18n="dashboard.noInvoices" class="hidden text-sm text-slate-500 rounded-lg border border-slate-200 bg-white p-6"></p>
+          <div id="invoices-list" class="space-y-3"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="assets/js/translations.js"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

@@ -5,3 +5,4 @@ supabase==2.7.4
 python-dotenv==1.0.1
 slowapi==0.1.9
 resend==2.4.0
+stripe==11.1.1
