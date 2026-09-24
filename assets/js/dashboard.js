@@ -232,6 +232,13 @@
       return;
     }
 
+    // El staff interno usa el panel admin, no este panel de cliente.
+    const { data: profile } = await supabaseClient.from("profiles").select("is_staff").eq("id", data.session.user.id).single();
+    if (profile && profile.is_staff) {
+      window.location.href = "admin.html";
+      return;
+    }
+
     await loadDashboard(supabaseClient, data.session);
   });
 })();

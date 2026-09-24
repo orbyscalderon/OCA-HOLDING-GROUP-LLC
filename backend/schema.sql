@@ -131,6 +131,8 @@ create index if not exists idx_news_posts_published_at on news_posts (published_
 -- registrarse gracias al trigger handle_new_user() más abajo.
 create table if not exists profiles (
   id              uuid primary key references auth.users(id) on delete cascade,
+  email           text, -- copia de auth.users.email; el staff la necesita para buscar clientes
+                         -- desde el panel admin (auth.users no es accesible vía anon key)
   full_name       text,
   company_name    text,
   phone           text,
@@ -138,11 +140,13 @@ create table if not exists profiles (
   created_at      timestamptz not null default now()
 );
 
+create index if not exists idx_profiles_email on profiles (email);
+
 create or replace function handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, full_name)
-  values (new.id, new.raw_user_meta_data->>'full_name');
+  insert into public.profiles (id, email, full_name, company_name)
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'company_name');
   return new;
 end;
 $$ language plpgsql security definer;
@@ -253,11 +257,11 @@ create policy "Public read access to published news"
 -- RLS — PORTAL DE CLIENTES (profiles / projects / project_updates / invoices)
 -- ----------------------------------------------------------------------------
 -- Cada cliente autenticado (Supabase Auth) solo ve sus propios proyectos,
--- avances y facturas. El staff interno (profiles.is_staff = true) ve todo.
--- La gestión de proyectos/avances por parte del staff hoy se hace desde
--- Supabase Studio o un futuro panel admin — no hay una UI admin en este
--- sitio todavía. Los pagos (insert/update de invoices) solo los hace el
--- backend con la service_role key, nunca el cliente ni el navegador.
+-- avances y facturas. El staff interno (profiles.is_staff = true) ve todo
+-- y gestiona proyectos/facturas desde /admin.html (ver assets/js/admin.js).
+-- El único estado que el staff NUNCA puede asignar directamente es
+-- invoices.status = 'paid': eso solo lo hace el webhook de Stripe con la
+-- service_role key, tras verificar la firma del pago real.
 
 create or replace function is_staff_user()
 returns boolean as $$
@@ -304,6 +308,22 @@ create policy "Clients can view their own invoices"
   on invoices for select
   using (client_id = auth.uid() or is_staff_user());
 
--- Sin política de insert/update para invoices: solo el backend
--- (service_role, que ignora RLS) crea facturas y las marca como pagadas
--- tras confirmar el webhook de Stripe. Ver backend/contact-api-node.js.
+-- El staff SÍ puede crear y editar facturas desde el panel admin (estado
+-- inicial 'pending'), pero nunca puede marcarlas 'paid' directamente desde
+-- el navegador: ese estado solo lo asigna el webhook de Stripe con la
+-- service_role key, tras verificar la firma del pago real. Así, un status
+-- 'paid' en la base de datos siempre significa que Stripe confirmó el cobro.
+create policy "Staff can create invoices"
+  on invoices for insert
+  with check (is_staff_user() and status = 'pending');
+
+create policy "Staff can update invoices except marking them paid"
+  on invoices for update
+  using (is_staff_user())
+  with check (is_staff_user() and status <> 'paid');
+
+-- El staff también necesita ver las solicitudes de cotización entrantes
+-- (subject_type = 'Quote') para convertirlas en proyectos.
+create policy "Staff can view contact requests"
+  on contact_requests for select
+  using (is_staff_user());

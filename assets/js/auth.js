@@ -92,17 +92,22 @@
       if (!supabaseClient) return showMessage(messageBox, t("login.errorConfigMissing"), "error");
 
       setSubmitting(form, true);
-      const { error } = await supabaseClient.auth.signInWithPassword({
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: form.email.value.trim(),
         password: form.password.value
       });
-      setSubmitting(form, false);
 
       if (error) {
+        setSubmitting(form, false);
         showMessage(messageBox, t("login.errorInvalidCredentials"), "error");
         return;
       }
-      window.location.href = "dashboard.html";
+
+      // El staff interno (profiles.is_staff = true) va al panel admin;
+      // el resto de los clientes van a su panel de seguimiento normal.
+      const { data: profile } = await supabaseClient.from("profiles").select("is_staff").eq("id", data.user.id).single();
+      setSubmitting(form, false);
+      window.location.href = profile && profile.is_staff ? "admin.html" : "dashboard.html";
     });
   }
 
@@ -164,7 +169,9 @@
   async function redirectIfAlreadySignedIn(supabaseClient) {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.auth.getSession();
-    if (data && data.session) window.location.href = "dashboard.html";
+    if (!data || !data.session) return;
+    const { data: profile } = await supabaseClient.from("profiles").select("is_staff").eq("id", data.session.user.id).single();
+    window.location.href = profile && profile.is_staff ? "admin.html" : "dashboard.html";
   }
 
   document.addEventListener("DOMContentLoaded", () => {
