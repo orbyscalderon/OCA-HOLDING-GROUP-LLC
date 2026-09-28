@@ -56,12 +56,31 @@ app = FastAPI(title="OCA Holding Group — Contact API")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Configurable vía env var para poder probar contra el dominio real Y el
+# preview de GitHub Pages a la vez durante la transición (separar por comas).
+# Ej: ALLOWED_ORIGINS=https://www.ocaholdinggroup.com,https://orbyscalderon.github.io
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "ALLOWED_ORIGINS",
+        "https://www.ocaholdinggroup.com,https://orbyscalderon.github.io",
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://www.ocaholdinggroup.com"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["POST"],
     allow_headers=["Content-Type"],
 )
+
+
+@app.get("/health")
+async def health_check():
+    """Usado por Railway (railway.json -> healthcheckPath) para confirmar
+    que el servicio arrancó correctamente. No requiere autenticación."""
+    return {"status": "ok"}
 
 # Mapea el valor de "department" enviado por el frontend (assets/js/main.js)
 # al subject_type esperado por la base de datos.
