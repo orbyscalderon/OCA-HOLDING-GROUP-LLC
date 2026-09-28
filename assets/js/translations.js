@@ -199,7 +199,7 @@ const translations = {
       errorGeneric: "Ocurrió un problema al enviar el formulario. Intenta nuevamente.",
       hqEyebrow: "Sede principal",
       hqTitle: "Oficina Corporativa — Estados Unidos",
-      hqAddress: "1209 Orange Street, Wilmington, DE 19801, Estados Unidos",
+      hqAddress: "30 N Gould St, STE R, Sheridan, WY 82801, Estados Unidos",
       hqPhone: "+1 (302) 555-0148",
       hqEmail: "info@ocaholdinggroup.com",
       subsidiariesEyebrow: "Oficinas regionales",
@@ -215,7 +215,7 @@ const translations = {
       termsLink: "Términos de Uso",
       privacyLink: "Política de Privacidad",
       rightsReserved: "Todos los derechos reservados.",
-      registeredNote: "OCA Holding Group LLC es una sociedad de responsabilidad limitada (LLC) constituida bajo las leyes del Estado de Delaware, Estados Unidos. La información de este sitio tiene fines informativos y no constituye una oferta de venta ni una solicitud de compra de valores."
+      registeredNote: "OCA Holding Group LLC es una sociedad de responsabilidad limitada (LLC) constituida bajo las leyes del Estado de Wyoming, Estados Unidos. La información de este sitio tiene fines informativos y no constituye una oferta de venta ni una solicitud de compra de valores."
     },
     login: {
       pageTitle: "Portal de Clientes",
@@ -298,7 +298,7 @@ const translations = {
         s7Title: "7. Modificaciones",
         s7Text: "Nos reservamos el derecho de modificar estos Términos en cualquier momento. Los cambios entrarán en vigor desde su publicación en este sitio.",
         s8Title: "8. Ley Aplicable y Jurisdicción",
-        s8Text: "Estos Términos se rigen por las leyes del Estado de Delaware, Estados Unidos, sin perjuicio de sus normas sobre conflicto de leyes. Cualquier disputa se someterá a los tribunales competentes de dicho Estado.",
+        s8Text: "Estos Términos se rigen por las leyes del Estado de Wyoming, Estados Unidos, sin perjuicio de sus normas sobre conflicto de leyes. Cualquier disputa se someterá a los tribunales competentes de dicho Estado.",
         s9Title: "9. Contacto",
         s9Text: "Para consultas relacionadas con estos Términos, puede escribirnos a legal@ocaholdinggroup.com."
       },
@@ -522,7 +522,7 @@ const translations = {
       errorGeneric: "There was a problem submitting the form. Please try again.",
       hqEyebrow: "Headquarters",
       hqTitle: "Corporate Office — United States",
-      hqAddress: "1209 Orange Street, Wilmington, DE 19801, United States",
+      hqAddress: "30 N Gould St, STE R, Sheridan, WY 82801, United States",
       hqPhone: "+1 (302) 555-0148",
       hqEmail: "info@ocaholdinggroup.com",
       subsidiariesEyebrow: "Regional offices",
@@ -538,7 +538,7 @@ const translations = {
       termsLink: "Terms of Use",
       privacyLink: "Privacy Policy",
       rightsReserved: "All rights reserved.",
-      registeredNote: "OCA Holding Group LLC is a limited liability company organized under the laws of the State of Delaware, United States. Information on this site is for informational purposes only and does not constitute an offer to sell or a solicitation to buy securities."
+      registeredNote: "OCA Holding Group LLC is a limited liability company organized under the laws of the State of Wyoming, United States. Information on this site is for informational purposes only and does not constitute an offer to sell or a solicitation to buy securities."
     },
     login: {
       pageTitle: "Client Portal",
@@ -621,7 +621,7 @@ const translations = {
         s7Title: "7. Modifications",
         s7Text: "We reserve the right to modify these Terms at any time. Changes take effect upon publication on this site.",
         s8Title: "8. Governing Law and Jurisdiction",
-        s8Text: "These Terms are governed by the laws of the State of Delaware, United States, without regard to its conflict-of-laws principles. Any dispute shall be submitted to the competent courts of that State.",
+        s8Text: "These Terms are governed by the laws of the State of Wyoming, United States, without regard to its conflict-of-laws principles. Any dispute shall be submitted to the competent courts of that State.",
         s9Title: "9. Contact",
         s9Text: "For questions regarding these Terms, please contact legal@ocaholdinggroup.com."
       },
