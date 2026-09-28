@@ -11,16 +11,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OCA Holding Group LLC | Grupo Holding Multisectorial — Inversión y Gobierno Corporativo</title>
-<meta name="description" content="OCA Holding Group LLC es un grupo holding multisectorial con presencia en tecnología, bienes raíces, servicios, entretenimiento, energía y finanzas. Conozca nuestro portafolio, gobierno corporativo y relación con inversionistas.">
+<title>OCA Holding Group LLC | Desarrollo Web, Aplicaciones y Software a Medida</title>
+<meta name="description" content="OCA Holding Group LLC diseña y desarrolla sitios web, aplicaciones web y móviles, e-commerce y software a medida. Un solo equipo, de principio a fin.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.ocaholdinggroup.com/">
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="OCA Holding Group LLC">
-<meta property="og:title" content="OCA Holding Group LLC | Capital, visión y disciplina operativa">
-<meta property="og:description" content="Grupo holding multisectorial que adquiere, desarrolla y potencia empresas en tecnología, bienes raíces, servicios, entretenimiento, energía y finanzas.">
+<meta property="og:title" content="OCA Holding Group LLC | Desarrollo Web y Software a Medida">
+<meta property="og:description" content="Diseñamos y desarrollamos sitios web, aplicaciones y software a medida — con un portal de clientes para seguir el avance de tu proyecto.">
 <meta property="og:url" content="https://www.ocaholdinggroup.com/">
 <meta property="og:image" content="https://www.ocaholdinggroup.com/assets/og/oca-og-image.png">
 <meta property="og:image:width" content="1200">
@@ -32,7 +32,7 @@
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="OCA Holding Group LLC">
-<meta name="twitter:description" content="Capital, visión y disciplina operativa para construir negocios duraderos.">
+<meta name="twitter:description" content="Desarrollo web, aplicaciones y software a medida — de principio a fin.">
 <meta name="twitter:image" content="https://www.ocaholdinggroup.com/assets/og/oca-og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,18 +63,17 @@
   };
 </script>
 
-<!-- JSON-LD: Organization / HoldingCompany schema (SEO estructurado) -->
+<!-- JSON-LD: ProfessionalService schema (SEO estructurado) -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": ["Organization", "Corporation"],
+  "@type": ["Organization", "ProfessionalService"],
   "name": "OCA Holding Group LLC",
   "legalName": "OCA Holding Group LLC",
   "alternateName": "OCA Holding Group",
   "url": "https://www.ocaholdinggroup.com/",
   "logo": "https://www.ocaholdinggroup.com/assets/img/logo-icon.svg",
-  "description": "OCA Holding Group LLC is a multi-sector holding company that acquires, develops, and empowers high-growth-potential companies across technology, real estate, services, entertainment, energy, and finance.",
-  "foundingDate": "2016-01-01",
+  "description": "OCA Holding Group LLC is a web development and digital services studio building websites, web and mobile applications, e-commerce, and custom software.",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "30 N Gould St, STE R",
@@ -83,18 +82,11 @@
     "postalCode": "82801",
     "addressCountry": "US"
   },
-  "contactPoint": [
-    { "@type": "ContactPoint", "contactType": "investor relations", "email": "investors@ocaholdinggroup.com" },
-    { "@type": "ContactPoint", "contactType": "media relations", "email": "press@ocaholdinggroup.com" }
-  ],
-  "subOrganization": [
-    { "@type": "Organization", "name": "Orbis Digital Systems", "url": "https://example.com/orbis-digital" },
-    { "@type": "Organization", "name": "Meridian Properties Group", "url": "https://example.com/meridian-properties" },
-    { "@type": "Organization", "name": "Vantage Business Solutions", "url": "https://example.com/vantage-solutions" },
-    { "@type": "Organization", "name": "Lumina Entertainment Group", "url": "https://example.com/lumina-entertainment" },
-    { "@type": "Organization", "name": "Solara Energy Holdings", "url": "https://example.com/solara-energy" },
-    { "@type": "Organization", "name": "Capital Bridge Partners", "url": "https://example.com/capital-bridge" }
-  ]
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "customer service",
+    "email": "info@ocaholdinggroup.com"
+  }
 }
 </script>
 
@@ -125,7 +117,7 @@
             <span data-lang-toggle-label></span>
           </button>
           <a href="login.html" data-i18n="nav.clientPortal" class="text-sm font-medium text-graphite hover:text-navy transition-colors mr-1"></a>
-          <a href="contacto.html" data-i18n="nav.investors" class="rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
+          <a href="contacto.html?dept=quote" data-i18n="nav.getQuote" class="rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
         </div>
 
         <button id="menu-toggle" type="button" aria-expanded="false" aria-label="Abrir menú" class="lg:hidden flex items-center justify-center rounded-md p-2 text-navy">
@@ -161,8 +153,8 @@
           <h1 data-i18n="home.heroTitle" class="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight text-white mb-6"></h1>
           <p data-i18n="home.heroSubtitle" class="text-lg text-slate-300 leading-relaxed mb-10 max-w-2xl"></p>
           <div class="flex flex-col sm:flex-row gap-4">
-            <a href="portafolio.html" data-i18n="home.ctaPrimary" class="inline-flex items-center justify-center rounded-full bg-gold px-7 py-3.5 text-sm font-semibold text-navy hover:bg-gold-light transition-colors"></a>
-            <a href="contacto.html" data-i18n="home.ctaSecondary" class="inline-flex items-center justify-center rounded-full border border-white/30 px-7 py-3.5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"></a>
+            <a href="contacto.html?dept=quote" data-i18n="home.ctaPrimary" class="inline-flex items-center justify-center rounded-full bg-gold px-7 py-3.5 text-sm font-semibold text-navy hover:bg-gold-light transition-colors"></a>
+            <a href="portafolio.html" data-i18n="home.ctaSecondary" class="inline-flex items-center justify-center rounded-full border border-white/30 px-7 py-3.5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"></a>
           </div>
         </div>
       </div>
@@ -213,7 +205,7 @@
         </div>
 
         <!-- Grid renderizado dinámicamente por main.js desde window.OCA_DATA.companies -->
-        <div id="portfolio-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <div id="portfolio-grid" class="js-portfolio-grid grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
       </div>
     </section>
 
@@ -255,12 +247,12 @@
       <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center" data-reveal>
         <h2 data-i18n="home.ctaBannerTitle" class="font-serif text-3xl sm:text-4xl font-semibold text-white"></h2>
         <p data-i18n="home.ctaBannerText" class="mt-4 text-base text-slate-300"></p>
-        <a href="contacto.html" data-i18n="home.ctaBannerButton" class="mt-8 inline-flex items-center justify-center rounded-full bg-gold px-8 py-3.5 text-sm font-semibold text-navy hover:bg-gold-light transition-colors"></a>
+        <a href="contacto.html?dept=quote" data-i18n="home.ctaBannerButton" class="mt-8 inline-flex items-center justify-center rounded-full bg-gold px-8 py-3.5 text-sm font-semibold text-navy hover:bg-gold-light transition-colors"></a>
       </div>
     </section>
   </main>
 
-  <!-- ============ MODAL: FICHA TÉCNICA DE EMPRESA (compartido) ============ -->
+  <!-- ============ MODAL: DETALLE DE SERVICIO (compartido) ============ -->
   <div id="company-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 oca-modal-backdrop">
     <div class="relative w-full max-w-lg rounded-xl bg-white p-8 shadow-2xl">
       <button type="button" data-modal-close aria-label="Cerrar" class="absolute right-4 top-4 text-slate-400 hover:text-navy">
@@ -269,7 +261,7 @@
       <p data-modal-tagline class="text-xs font-semibold uppercase tracking-widest text-gold mb-2"></p>
       <h3 data-modal-name class="font-serif text-2xl font-semibold text-navy mb-4"></h3>
       <p data-modal-description class="text-sm text-slate-600 leading-relaxed mb-6"></p>
-      <dl class="grid grid-cols-2 gap-4 border-t border-slate-200 pt-6 mb-6">
+      <dl class="grid grid-cols-1 gap-4 border-t border-slate-200 pt-6 mb-6">
         <div>
           <dt data-modal-industry-label class="text-xs uppercase tracking-wide text-slate-400"></dt>
           <dd data-modal-sector class="mt-1 text-sm font-medium text-navy"></dd>
@@ -279,8 +271,7 @@
           <dd data-modal-status class="mt-1 text-sm font-medium text-navy"></dd>
         </div>
       </dl>
-      <p data-modal-joined class="text-xs text-slate-400 mb-6"></p>
-      <a data-modal-link href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
+      <a data-modal-link href="#" class="inline-flex items-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
     </div>
   </div>
 

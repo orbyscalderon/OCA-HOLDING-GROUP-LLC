@@ -1,24 +1,26 @@
 <!-- ==========================================================================
-     OCA HOLDING GROUP LLC — PORTAFOLIO DE EMPRESAS
-     Las tarjetas y el modal de "ficha técnica" se generan dinámicamente en
-     /assets/js/main.js a partir de /assets/js/data.js (OCA_DATA.companies).
-     Para producción: sustituir data.js por fetch('/api/companies') —
-     ver /backend/schema.sql (tabla `companies`).
+     OCA HOLDING GROUP LLC — SERVICIOS
+     Las tarjetas y el modal de detalle se generan dinámicamente en
+     /assets/js/main.js a partir de /assets/js/data.js (OCA_DATA.services).
+     Los tipos de servicio (website/webapp/mobileapp/ecommerce/software/
+     branding) son los mismos valores que el selector "Tipo de proyecto" del
+     formulario de cotización (contacto.html), para mantener un solo
+     vocabulario en todo el sitio.
      ========================================================================== -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portafolio de Empresas | OCA Holding Group LLC</title>
-<meta name="description" content="Descubra las empresas filiales de OCA Holding Group LLC en tecnología, bienes raíces, servicios, entretenimiento, energía y finanzas.">
+<title>Servicios | OCA Holding Group LLC</title>
+<meta name="description" content="Servicios de OCA Holding Group LLC: sitios web, aplicaciones web y móviles, e-commerce, software a medida y branding digital.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.ocaholdinggroup.com/portafolio.html">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="OCA Holding Group LLC">
-<meta property="og:title" content="Portafolio de Empresas | OCA Holding Group LLC">
-<meta property="og:description" content="Empresas filiales de OCA Holding Group LLC en tecnología, bienes raíces, servicios, entretenimiento, energía y finanzas.">
+<meta property="og:title" content="Servicios | OCA Holding Group LLC">
+<meta property="og:description" content="Sitios web, aplicaciones web y móviles, e-commerce, software a medida y branding digital.">
 <meta property="og:url" content="https://www.ocaholdinggroup.com/portafolio.html">
 <meta property="og:image" content="https://www.ocaholdinggroup.com/assets/og/oca-og-image.png">
 <meta property="og:image:width" content="1200">
@@ -28,8 +30,8 @@
 <meta property="og:locale:alternate" content="en_US">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Portafolio de Empresas | OCA Holding Group LLC">
-<meta name="twitter:description" content="Empresas filiales de OCA Holding Group LLC por sector.">
+<meta name="twitter:title" content="Servicios | OCA Holding Group LLC">
+<meta name="twitter:description" content="Sitios web, aplicaciones, e-commerce, software a medida y branding digital.">
 <meta name="twitter:image" content="https://www.ocaholdinggroup.com/assets/og/oca-og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,17 +65,22 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": ["Organization", "ProfessionalService"],
   "name": "OCA Holding Group LLC",
   "url": "https://www.ocaholdinggroup.com/",
-  "subOrganization": [
-    { "@type": "Organization", "name": "Orbis Digital Systems", "url": "https://example.com/orbis-digital", "industry": "Technology" },
-    { "@type": "Organization", "name": "Meridian Properties Group", "url": "https://example.com/meridian-properties", "industry": "Real Estate" },
-    { "@type": "Organization", "name": "Vantage Business Solutions", "url": "https://example.com/vantage-solutions", "industry": "Professional Services" },
-    { "@type": "Organization", "name": "Lumina Entertainment Group", "url": "https://example.com/lumina-entertainment", "industry": "Entertainment" },
-    { "@type": "Organization", "name": "Solara Energy Holdings", "url": "https://example.com/solara-energy", "industry": "Energy" },
-    { "@type": "Organization", "name": "Capital Bridge Partners", "url": "https://example.com/capital-bridge", "industry": "Finance" }
-  ]
+  "description": "OCA Holding Group LLC provides web development, web and mobile applications, e-commerce, custom software, and digital branding services.",
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Servicios digitales",
+    "itemListElement": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sitios Web Institucionales", "serviceType": "Web Development" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Aplicaciones Web", "serviceType": "Web Application Development" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Aplicaciones Móviles", "serviceType": "Mobile App Development" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Tiendas en Línea", "serviceType": "E-commerce Development" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Software a Medida", "serviceType": "Custom Software Development" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Branding e Identidad Digital", "serviceType": "Branding" } }
+    ]
+  }
 }
 </script>
 
@@ -102,7 +109,7 @@
             <span data-lang-toggle-label></span>
           </button>
           <a href="login.html" data-i18n="nav.clientPortal" class="text-sm font-medium text-graphite hover:text-navy transition-colors mr-1"></a>
-          <a href="contacto.html" data-i18n="nav.investors" class="rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
+          <a href="contacto.html?dept=quote" data-i18n="nav.getQuote" class="rounded-full bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
         </div>
         <button id="menu-toggle" type="button" aria-expanded="false" aria-label="Abrir menú" class="lg:hidden flex items-center justify-center rounded-md p-2 text-navy">
           <svg data-icon-open xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -141,16 +148,16 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-wrap gap-3 justify-center mb-14" data-reveal="fade">
           <button type="button" data-sector-filter="all" class="rounded-full bg-navy text-white px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="portfolio.filterAll"></button>
-          <button type="button" data-sector-filter="technology" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="portfolio.sector_technology"></button>
-          <button type="button" data-sector-filter="realestate" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="portfolio.sector_realestate"></button>
-          <button type="button" data-sector-filter="services" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="portfolio.sector_services"></button>
-          <button type="button" data-sector-filter="entertainment" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="portfolio.sector_entertainment"></button>
-          <button type="button" data-sector-filter="energy" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="portfolio.sector_energy"></button>
-          <button type="button" data-sector-filter="finance" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="portfolio.sector_finance"></button>
+          <button type="button" data-sector-filter="website" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="contact.projectTypeWebsite"></button>
+          <button type="button" data-sector-filter="webapp" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="contact.projectTypeWebApp"></button>
+          <button type="button" data-sector-filter="mobileapp" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="contact.projectTypeMobileApp"></button>
+          <button type="button" data-sector-filter="ecommerce" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="contact.projectTypeEcommerce"></button>
+          <button type="button" data-sector-filter="software" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="contact.projectTypeSoftware"></button>
+          <button type="button" data-sector-filter="branding" class="rounded-full bg-white text-navy border border-slate-300 px-5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors" data-i18n="contact.projectTypeBranding"></button>
         </div>
 
-        <!-- Grid renderizado dinámicamente por main.js desde window.OCA_DATA.companies -->
-        <div id="portfolio-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <!-- Grid renderizado dinámicamente por main.js desde window.OCA_DATA.services -->
+        <div id="portfolio-grid" class="js-portfolio-grid grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
       </div>
     </section>
 
@@ -164,7 +171,7 @@
     </section>
   </main>
 
-  <!-- ============ MODAL: FICHA TÉCNICA DE EMPRESA ============ -->
+  <!-- ============ MODAL: DETALLE DE SERVICIO ============ -->
   <div id="company-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4 oca-modal-backdrop">
     <div class="relative w-full max-w-lg rounded-xl bg-white p-8 shadow-2xl">
       <button type="button" data-modal-close aria-label="Cerrar" class="absolute right-4 top-4 text-slate-400 hover:text-navy">
@@ -173,7 +180,7 @@
       <p data-modal-tagline class="text-xs font-semibold uppercase tracking-widest text-gold mb-2"></p>
       <h3 data-modal-name class="font-serif text-2xl font-semibold text-navy mb-4"></h3>
       <p data-modal-description class="text-sm text-slate-600 leading-relaxed mb-6"></p>
-      <dl class="grid grid-cols-2 gap-4 border-t border-slate-200 pt-6 mb-6">
+      <dl class="grid grid-cols-1 gap-4 border-t border-slate-200 pt-6 mb-6">
         <div>
           <dt data-modal-industry-label class="text-xs uppercase tracking-wide text-slate-400"></dt>
           <dd data-modal-sector class="mt-1 text-sm font-medium text-navy"></dd>
@@ -183,8 +190,7 @@
           <dd data-modal-status class="mt-1 text-sm font-medium text-navy"></dd>
         </div>
       </dl>
-      <p data-modal-joined class="text-xs text-slate-400 mb-6"></p>
-      <a data-modal-link href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
+      <a data-modal-link href="#" class="inline-flex items-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></a>
     </div>
   </div>
 

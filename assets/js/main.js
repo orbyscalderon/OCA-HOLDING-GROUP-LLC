@@ -151,39 +151,40 @@
   }
 
   /* -------------------------------------------------------------
-   * 4. RENDER DINÁMICO: PORTAFOLIO
+   * 4. RENDER DINÁMICO: SERVICIOS
    * ----------------------------------------------------------- */
 
-  let activeSector = "all";
+  let activeServiceType = "all";
 
   function renderPortfolio(lang) {
-    const grid = document.getElementById("portfolio-grid");
-    if (!grid || !window.OCA_DATA) return;
+    const grids = document.querySelectorAll(".js-portfolio-grid");
+    if (!grids.length || !window.OCA_DATA) return;
 
     const dict = window.OCA_TRANSLATIONS[lang].portfolio;
-    const companies = window.OCA_DATA.companies.filter(
-      (c) => activeSector === "all" || c.sector === activeSector
+    const cdict = window.OCA_TRANSLATIONS[lang].contact;
+    const services = window.OCA_DATA.services.filter(
+      (s) => activeServiceType === "all" || s.type === activeServiceType
     );
 
-    grid.innerHTML = companies
-      .map((company) => {
-        const content = company[lang];
+    const html = services
+      .map((service) => {
+        const content = service[lang];
         return `
         <article class="oca-card group flex flex-col rounded-xl border border-slate-200 bg-white p-6 sm:p-7" data-reveal>
           <div class="flex items-center gap-4 mb-4">
             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[var(--oca-navy)] font-serif-display text-lg font-semibold text-[var(--oca-gold-light)]">
-              ${company.logoInitial}
+              ${service.logoInitial}
             </div>
             <div>
               <span class="inline-block rounded-full bg-[var(--oca-paper)] px-3 py-1 text-xs font-medium uppercase tracking-wide text-[var(--oca-navy)]">
-                ${dict["sector_" + (company.sector === "realestate" ? "realestate" : company.sector)]}
+                ${cdict["projectType" + projectTypeKeySuffix(service.type)]}
               </span>
             </div>
           </div>
           <h3 class="font-serif-display text-xl font-semibold text-[var(--oca-navy)] mb-1">${content.name}</h3>
           <p class="text-sm font-medium text-[var(--oca-gold)] mb-3">${content.tagline}</p>
           <p class="text-sm text-slate-600 leading-relaxed mb-6 flex-1">${content.description}</p>
-          <button type="button" class="oca-view-details mt-auto inline-flex items-center gap-2 text-sm font-semibold text-[var(--oca-navy)] hover:text-[var(--oca-gold)] transition-colors" data-company-id="${company.id}">
+          <button type="button" class="oca-view-details mt-auto inline-flex items-center gap-2 text-sm font-semibold text-[var(--oca-navy)] hover:text-[var(--oca-gold)] transition-colors" data-service-id="${service.id}">
             ${dict.viewDetails}
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 9H3a1 1 0 110-2h9.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
           </button>
@@ -191,32 +192,57 @@
       })
       .join("");
 
-    initScrollReveal();
-    grid.querySelectorAll(".oca-view-details").forEach((btn) => {
-      btn.addEventListener("click", () => openCompanyModal(parseInt(btn.getAttribute("data-company-id"), 10)));
+    grids.forEach((grid) => {
+      grid.innerHTML = html;
+      grid.querySelectorAll(".oca-view-details").forEach((btn) => {
+        btn.addEventListener("click", () => openCompanyModal(parseInt(btn.getAttribute("data-service-id"), 10)));
+      });
     });
+
+    initScrollReveal();
   }
 
-  function openCompanyModal(companyId) {
+  // Mapea el valor de "type" (usado tal cual en la base de datos y en el
+  // selector del formulario de cotización) al sufijo camelCase de las
+  // claves de traducción contact.projectType*. No se puede derivar con un
+  // simple capitalize() porque "webapp" -> "WebApp" y "mobileapp" ->
+  // "MobileApp" llevan una mayúscula intermedia.
+  const PROJECT_TYPE_KEY_SUFFIX = {
+    website: "Website",
+    webapp: "WebApp",
+    mobileapp: "MobileApp",
+    ecommerce: "Ecommerce",
+    software: "Software",
+    branding: "Branding",
+    other: "Other"
+  };
+
+  function projectTypeKeySuffix(str) {
+    return PROJECT_TYPE_KEY_SUFFIX[str] || (str.charAt(0).toUpperCase() + str.slice(1));
+  }
+
+  function openCompanyModal(serviceId) {
     const modal = document.getElementById("company-modal");
     if (!modal || !window.OCA_DATA) return;
     const lang = getCurrentLang();
     const dict = window.OCA_TRANSLATIONS[lang].portfolio;
-    const company = window.OCA_DATA.companies.find((c) => c.id === companyId);
-    if (!company) return;
-    const content = company[lang];
+    const cdict = window.OCA_TRANSLATIONS[lang].contact;
+    const service = window.OCA_DATA.services.find((s) => s.id === serviceId);
+    if (!service) return;
+    const content = service[lang];
 
     modal.querySelector("[data-modal-name]").textContent = content.name;
     modal.querySelector("[data-modal-tagline]").textContent = content.tagline;
     modal.querySelector("[data-modal-description]").textContent = content.description;
-    modal.querySelector("[data-modal-sector]").textContent = dict["sector_" + company.sector];
-    modal.querySelector("[data-modal-status]").textContent = dict.statusActive;
-    modal.querySelector("[data-modal-joined]").textContent = dict.inceptionLabel + " " + company.joinedYear;
+    modal.querySelector("[data-modal-sector]").textContent = cdict["projectType" + projectTypeKeySuffix(service.type)];
+    modal.querySelector("[data-modal-status]").textContent = content.keyFeatures;
     modal.querySelector("[data-modal-industry-label]").textContent = dict.cardIndustryLabel;
-    modal.querySelector("[data-modal-status-label]").textContent = dict.cardStatusLabel;
+    modal.querySelector("[data-modal-status-label]").textContent = dict.cardIncludesLabel;
+    const joinedEl = modal.querySelector("[data-modal-joined]");
+    if (joinedEl) joinedEl.textContent = "";
     const link = modal.querySelector("[data-modal-link]");
-    link.href = company.website;
-    link.textContent = dict.visitSite;
+    link.href = "contacto.html?dept=quote&type=" + service.type;
+    link.textContent = dict.requestQuote;
 
     modal.classList.remove("hidden");
     document.body.classList.add("overflow-hidden");
@@ -238,7 +264,7 @@
     if (!buttons.length) return;
     buttons.forEach((btn) => {
       btn.addEventListener("click", () => {
-        activeSector = btn.getAttribute("data-sector-filter");
+        activeServiceType = btn.getAttribute("data-sector-filter");
         buttons.forEach((b) => b.classList.remove("bg-[var(--oca-navy)]", "text-white"));
         buttons.forEach((b) => b.classList.add("bg-white", "text-[var(--oca-navy)]"));
         btn.classList.remove("bg-white", "text-[var(--oca-navy)]");
@@ -381,12 +407,20 @@
       form.department.addEventListener("change", () => toggleQuoteFields(form.department.value === "quote"));
 
       // Permite enlazar directamente a la solicitud de cotización, ej.
-      // contacto.html?dept=quote (usado por los CTAs de Portafolio/Home)
-      const requestedDept = new URLSearchParams(window.location.search).get("dept");
+      // contacto.html?dept=quote&type=website (usado por los CTAs de
+      // Servicios/Home y por el botón "Solicitar cotización" de cada
+      // tarjeta de servicio, que además preselecciona el tipo de proyecto).
+      const params = new URLSearchParams(window.location.search);
+      const requestedDept = params.get("dept");
       if (requestedDept && Array.from(form.department.options).some((o) => o.value === requestedDept)) {
         form.department.value = requestedDept;
       }
       toggleQuoteFields(form.department.value === "quote");
+
+      const requestedType = params.get("type");
+      if (requestedType && form.projectType && Array.from(form.projectType.options).some((o) => o.value === requestedType)) {
+        form.projectType.value = requestedType;
+      }
     }
 
     function setFieldError(field, hasError) {
