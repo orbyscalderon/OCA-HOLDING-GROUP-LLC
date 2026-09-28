@@ -15,8 +15,8 @@
  * Mientras estos sigan con el valor placeholder, login.html y dashboard.html
  * muestran un aviso en vez de intentar conectarse.
  */
-window.OCA_SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
-window.OCA_SUPABASE_ANON_KEY = "YOUR_ANON_PUBLIC_KEY";
+window.OCA_SUPABASE_URL = "https://mqtjemdnvxqtudtkamrn.supabase.co";
+window.OCA_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xdGplbWRudnhxdHVkdGthbXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MzQ0ODMsImV4cCI6MjEwNjIxMDQ4M30.KQuSuujUAd7dLl_hASGoLPNP1hYPV8yls8bl2IwiAHw";
 
 // URL base del backend (Node o FastAPI) donde vive /api/create-checkout-session.
 // En desarrollo local suele ser http://localhost:3001
