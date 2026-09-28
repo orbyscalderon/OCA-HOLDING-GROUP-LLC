@@ -92,22 +92,18 @@
       if (!supabaseClient) return showMessage(messageBox, t("login.errorConfigMissing"), "error");
 
       setSubmitting(form, true);
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
+      const { error } = await supabaseClient.auth.signInWithPassword({
         email: form.email.value.trim(),
         password: form.password.value
       });
 
+      setSubmitting(form, false);
       if (error) {
-        setSubmitting(form, false);
         showMessage(messageBox, t("login.errorInvalidCredentials"), "error");
         return;
       }
-
-      // El staff interno (profiles.is_staff = true) va al panel admin;
-      // el resto de los clientes van a su panel de seguimiento normal.
-      const { data: profile } = await supabaseClient.from("profiles").select("is_staff").eq("id", data.user.id).single();
-      setSubmitting(form, false);
-      window.location.href = profile && profile.is_staff ? "admin.html" : "dashboard.html";
+      // La redirección (admin.html vs dashboard.html según is_staff) la
+      // maneja initAuthStateListener al recibir el evento SIGNED_IN.
     });
   }
 
@@ -139,10 +135,9 @@
       }
 
       // Si la confirmación por correo está activada en el proyecto de
-      // Supabase (comportamiento por defecto), no hay sesión todavía.
-      if (data.session) {
-        window.location.href = "dashboard.html";
-      } else {
+      // Supabase (comportamiento por defecto), no hay sesión todavía y no
+      // pasa nada más aquí: initAuthStateListener redirige solo si sí la hay.
+      if (!data.session) {
         showMessage(messageBox, t("login.signUpSuccessCheckEmail"), "success");
         form.reset();
       }
@@ -166,12 +161,62 @@
     });
   }
 
-  async function redirectIfAlreadySignedIn(supabaseClient) {
-    if (!supabaseClient) return;
-    const { data } = await supabaseClient.auth.getSession();
-    if (!data || !data.session) return;
-    const { data: profile } = await supabaseClient.from("profiles").select("is_staff").eq("id", data.session.user.id).single();
+  // Muestra el formulario de "nueva contraseña" y oculta el resto — usado
+  // cuando Supabase confirma que el visitante llegó desde un enlace de
+  // recuperación válido (evento PASSWORD_RECOVERY, ver initAuthStateListener).
+  function showResetPasswordForm() {
+    const tabs = document.querySelector(".flex.rounded-full.bg-paper");
+    const signinForm = document.getElementById("signin-form");
+    const signupForm = document.getElementById("signup-form");
+    const resetForm = document.getElementById("reset-password-form");
+    if (tabs) tabs.classList.add("hidden");
+    if (signinForm) signinForm.classList.add("hidden");
+    if (signupForm) signupForm.classList.add("hidden");
+    if (resetForm) resetForm.classList.remove("hidden");
+  }
+
+  function initResetPasswordForm(supabaseClient) {
+    const form = document.getElementById("reset-password-form");
+    if (!form) return;
+    const messageBox = document.getElementById("form-message");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setSubmitting(form, true);
+      const { error } = await supabaseClient.auth.updateUser({ password: form.newPassword.value });
+      setSubmitting(form, false);
+
+      if (error) {
+        showMessage(messageBox, error.message || t("login.errorGeneric"), "error");
+        return;
+      }
+      showMessage(messageBox, t("login.resetPasswordSuccess"), "success");
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1500);
+    });
+  }
+
+  async function redirectAfterAuth(supabaseClient, session) {
+    const { data: profile } = await supabaseClient.from("profiles").select("is_staff").eq("id", session.user.id).single();
     window.location.href = profile && profile.is_staff ? "admin.html" : "dashboard.html";
+  }
+
+  // Escucha los cambios de sesión en vez de solo leerla una vez al cargar:
+  // así podemos distinguir "ya tiene sesión, mándalo al panel" de "acaba de
+  // llegar de un enlace de recuperación, muéstrale el formulario de nueva
+  // contraseña" — ambos casos crean una sesión, pero requieren manejo distinto.
+  function initAuthStateListener(supabaseClient) {
+    if (!supabaseClient) return;
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        showResetPasswordForm();
+        return;
+      }
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
+        redirectAfterAuth(supabaseClient, session);
+      }
+    });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -181,6 +226,7 @@
     initSignIn(supabaseClient);
     initSignUp(supabaseClient);
     initForgotPassword(supabaseClient);
-    redirectIfAlreadySignedIn(supabaseClient);
+    initResetPasswordForm(supabaseClient);
+    initAuthStateListener(supabaseClient);
   });
 })();

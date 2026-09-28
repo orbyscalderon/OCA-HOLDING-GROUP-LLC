@@ -23,7 +23,9 @@ const Stripe = require("stripe");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+// Restringido al dominio del sitio — sin esto, cualquier página en internet
+// podría llamar a esta API desde el navegador de un visitante.
+app.use(cors({ origin: process.env.SITE_URL || "https://www.ocaholdinggroup.com", methods: ["GET", "POST"] }));
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);

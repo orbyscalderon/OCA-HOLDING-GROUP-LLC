@@ -244,7 +244,12 @@ const translations = {
       switchToSignUpPrompt: "¿Aún no tienes cuenta?",
       switchToSignUpLink: "Crear una",
       switchToSignInPrompt: "¿Ya tienes cuenta?",
-      switchToSignInLink: "Inicia sesión"
+      switchToSignInLink: "Inicia sesión",
+      resetPasswordTitle: "Elige una nueva contraseña",
+      resetPasswordText: "Confirmamos tu identidad mediante el enlace que recibiste por correo.",
+      labelNewPassword: "Nueva contraseña",
+      submitResetPassword: "Guardar nueva contraseña",
+      resetPasswordSuccess: "Contraseña actualizada. Redirigiendo..."
     },
     dashboard: {
       pageTitle: "Mi Panel",
@@ -562,7 +567,12 @@ const translations = {
       switchToSignUpPrompt: "Don't have an account yet?",
       switchToSignUpLink: "Create one",
       switchToSignInPrompt: "Already have an account?",
-      switchToSignInLink: "Sign in"
+      switchToSignInLink: "Sign in",
+      resetPasswordTitle: "Choose a new password",
+      resetPasswordText: "We confirmed your identity via the link you received by email.",
+      labelNewPassword: "New password",
+      submitResetPassword: "Save new password",
+      resetPasswordSuccess: "Password updated. Redirecting..."
     },
     dashboard: {
       pageTitle: "My Dashboard",

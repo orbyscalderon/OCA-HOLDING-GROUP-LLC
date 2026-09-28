@@ -132,6 +132,19 @@
             <button type="button" id="forgot-password-link" data-i18n="login.forgotPassword" class="block w-full text-center text-xs font-medium text-slate-500 hover:text-navy transition-colors"></button>
           </form>
 
+          <!-- FORMULARIO: ESTABLECER NUEVA CONTRASEÑA (tras clic en el enlace de recuperación) -->
+          <form id="reset-password-form" class="space-y-5 hidden">
+            <div>
+              <h2 data-i18n="login.resetPasswordTitle" class="font-serif text-lg font-semibold text-navy mb-1"></h2>
+              <p data-i18n="login.resetPasswordText" class="text-xs text-slate-500 mb-4"></p>
+            </div>
+            <div data-field>
+              <label for="reset-password-new" data-i18n="login.labelNewPassword" class="block text-sm font-medium text-navy mb-1.5"></label>
+              <input type="password" id="reset-password-new" name="newPassword" required minlength="6" data-i18n-placeholder="login.placeholderPassword" class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-graphite focus:border-gold focus:ring-1 focus:ring-gold outline-none">
+            </div>
+            <button type="submit" data-submit-button data-i18n="login.submitResetPassword" class="w-full inline-flex items-center justify-center rounded-full bg-navy px-8 py-3.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors"></button>
+          </form>
+
           <!-- FORMULARIO: CREAR CUENTA -->
           <form id="signup-form" class="space-y-5 hidden">
             <div data-field>
