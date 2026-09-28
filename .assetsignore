@@ -1,0 +1,10 @@
+backend/
+.git/
+.github/
+.claude/
+.mcp.json
+.gitignore
+.assetsignore
+wrangler.toml
+node_modules/
+*.md
