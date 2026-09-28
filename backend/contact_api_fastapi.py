@@ -21,6 +21,7 @@ Ejecutar en desarrollo:
     uvicorn contact_api_fastapi:app --reload --port 3001
 """
 
+import logging
 import os
 from datetime import datetime, timezone
 from typing import Literal, Optional
@@ -47,6 +48,8 @@ stripe.api_key = os.environ["STRIPE_SECRET_KEY"]
 STRIPE_WEBHOOK_SECRET = os.environ["STRIPE_WEBHOOK_SECRET"]
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+logger = logging.getLogger("oca_contact_api")
 
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="OCA Holding Group — Contact API")
@@ -207,7 +210,15 @@ async def create_checkout_session(request: Request, payload: CreateCheckoutSessi
         )
         invoice = result.data
     except Exception as exc:
-        raise HTTPException(status_code=404, detail="invoice_not_found") from exc
+        # PGRST116 = PostgREST "no rows returned" por .single(): eso sí es un
+        # 404 genuino. Cualquier otro error (red, auth, Supabase caído) NO
+        # debe reportarse como "factura no encontrada" — hay que distinguirlo
+        # y registrarlo, o una caída real de la base de datos se vería igual
+        # que una factura inexistente.
+        if getattr(exc, "code", None) == "PGRST116":
+            raise HTTPException(status_code=404, detail="invoice_not_found") from exc
+        logger.error("create_checkout_session lookup error: %s", exc)
+        raise HTTPException(status_code=500, detail="internal_error") from exc
 
     if not invoice:
         raise HTTPException(status_code=404, detail="invoice_not_found")

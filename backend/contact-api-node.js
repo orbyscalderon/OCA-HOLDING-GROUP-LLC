@@ -217,7 +217,16 @@ app.post("/api/create-checkout-session", checkoutLimiter, async (req, res) => {
       .eq("id", invoiceId)
       .single();
 
-    if (invoiceError || !invoice) return res.status(404).json({ ok: false, errors: ["invoice_not_found"] });
+    // PGRST116 = PostgREST "no rows returned" por .single(): eso sí es un
+    // 404 genuino. Cualquier otro error (red, auth, Supabase caído) NO debe
+    // reportarse como "factura no encontrada" — hay que distinguirlo y
+    // registrarlo, o una caída real de la base de datos se vería igual que
+    // una factura inexistente.
+    if (invoiceError && invoiceError.code !== "PGRST116") {
+      console.error("create-checkout-session lookup error:", invoiceError);
+      return res.status(500).json({ ok: false, errors: ["internal_error"] });
+    }
+    if (!invoice) return res.status(404).json({ ok: false, errors: ["invoice_not_found"] });
     if (invoice.status === "paid") return res.status(400).json({ ok: false, errors: ["invoice_already_paid"] });
 
     const { data: userData } = await supabase.auth.admin.getUserById(invoice.client_id);
