@@ -2,9 +2,11 @@
 OCA Holding Group LLC — API de Contacto, Cotizaciones y Pagos (Python / FastAPI)
 -------------------------------------------------------------
 Rutas:
-    POST /api/contact                 -> formulario de /contacto.html
-    POST /api/create-checkout-session -> genera un link de pago de Stripe para una factura
-    POST /api/stripe-webhook          -> confirma el pago y marca la factura como 'paid'
+    POST /api/contact                    -> formulario de /contacto.html
+    POST /api/create-checkout-session     -> link de pago único (Stripe Checkout) para una factura
+    POST /api/create-subscription-checkout -> link de suscripción (Stripe Checkout) para un retainer
+    POST /api/cancel-subscription         -> cancela un retainer activo (requiere ser el dueño)
+    POST /api/stripe-webhook              -> confirma pagos/suscripciones y sincroniza su estado
 
 Alternativa en Python al backend Node.js (contact-api-node.js). Misma
 responsabilidad: validar, persistir en Supabase/Postgres y notificar por
@@ -29,7 +31,7 @@ from typing import Literal, Optional
 import resend
 import stripe
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -81,6 +83,44 @@ async def health_check():
     """Usado por Railway (railway.json -> healthcheckPath) para confirmar
     que el servicio arrancó correctamente. No requiere autenticación."""
     return {"status": "ok"}
+
+
+def get_authenticated_user_id(authorization: Optional[str]) -> str:
+    """
+    Verifica el JWT de sesión de Supabase que el navegador manda en el
+    header "Authorization: Bearer <token>" (dashboard.js/admin.js lo
+    obtienen con supabaseClient.auth.getSession()). Devuelve el user id
+    real, verificado contra Supabase Auth — nunca confiar en un client_id
+    que venga suelto en el cuerpo de la petición.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="missing_authorization")
+
+    token = authorization.removeprefix("Bearer ").strip()
+    try:
+        user_response = supabase.auth.get_user(token)
+    except Exception as exc:  # noqa: BLE001 — cualquier fallo de verificación es un 401
+        raise HTTPException(status_code=401, detail="invalid_token") from exc
+
+    if not user_response or not user_response.user:
+        raise HTTPException(status_code=401, detail="invalid_token")
+
+    return user_response.user.id
+
+
+def assert_owner_or_staff(user_id: str, resource_client_id: str) -> None:
+    """Permite la acción si el usuario autenticado es el dueño del recurso,
+    o si es staff interno (profiles.is_staff). Lanza 403 en caso contrario."""
+    if user_id == resource_client_id:
+        return
+    try:
+        profile = supabase.table("profiles").select("is_staff").eq("id", user_id).single().execute()
+        if profile.data and profile.data.get("is_staff"):
+            return
+    except Exception:  # noqa: BLE001 — si falla la verificación, no se concede acceso
+        pass
+    raise HTTPException(status_code=403, detail="forbidden")
+
 
 # Mapea el valor de "department" enviado por el frontend (assets/js/main.js)
 # al subject_type esperado por la base de datos.
@@ -213,12 +253,18 @@ class CreateCheckoutSessionPayload(BaseModel):
 
 @app.post("/api/create-checkout-session")
 @limiter.limit("20/15minute")
-async def create_checkout_session(request: Request, payload: CreateCheckoutSessionPayload):
+async def create_checkout_session(
+    request: Request, payload: CreateCheckoutSessionPayload, authorization: Optional[str] = Header(default=None)
+):
     """
     Crea una Stripe Checkout Session para una factura existente y devuelve
     la URL de pago. El monto NUNCA lo decide el navegador: siempre se lee
-    de la tabla `invoices` con la service_role key.
+    de la tabla `invoices` con la service_role key. Requiere que quien pide
+    el link sea el dueño de la factura (o staff) — verificado por JWT, no
+    por un client_id que venga en el cuerpo de la petición.
     """
+    user_id = get_authenticated_user_id(authorization)
+
     try:
         result = (
             supabase.table("invoices")
@@ -241,6 +287,9 @@ async def create_checkout_session(request: Request, payload: CreateCheckoutSessi
 
     if not invoice:
         raise HTTPException(status_code=404, detail="invoice_not_found")
+
+    assert_owner_or_staff(user_id, invoice["client_id"])
+
     if invoice["status"] == "paid":
         raise HTTPException(status_code=400, detail="invoice_already_paid")
 
@@ -280,6 +329,135 @@ async def create_checkout_session(request: Request, payload: CreateCheckoutSessi
         raise HTTPException(status_code=500, detail="internal_error") from exc
 
 
+class RetainerActionPayload(BaseModel):
+    retainer_id: str = Field(alias="retainerId")
+
+    class Config:
+        populate_by_name = True
+
+
+@app.post("/api/create-subscription-checkout")
+@limiter.limit("20/15minute")
+async def create_subscription_checkout(
+    request: Request, payload: RetainerActionPayload, authorization: Optional[str] = Header(default=None)
+):
+    """
+    Igual que /api/create-checkout-session, pero en modo suscripción: Stripe
+    cobra automáticamente cada `billing_interval` sin que nadie tenga que
+    volver a generar una factura a mano. El precio se define aquí mismo
+    (price_data) con los datos ya guardados en `retainers` — no requiere
+    tener un Price pre-creado en el dashboard de Stripe.
+    """
+    user_id = get_authenticated_user_id(authorization)
+
+    try:
+        result = (
+            supabase.table("retainers")
+            .select("id, description, amount_cents, currency, billing_interval, status, client_id")
+            .eq("id", payload.retainer_id)
+            .single()
+            .execute()
+        )
+        retainer = result.data
+    except Exception as exc:
+        if getattr(exc, "code", None) == "PGRST116":
+            raise HTTPException(status_code=404, detail="retainer_not_found") from exc
+        logger.error("create_subscription_checkout lookup error: %s", exc)
+        raise HTTPException(status_code=500, detail="internal_error") from exc
+
+    if not retainer:
+        raise HTTPException(status_code=404, detail="retainer_not_found")
+
+    assert_owner_or_staff(user_id, retainer["client_id"])
+
+    if retainer["status"] == "active":
+        raise HTTPException(status_code=400, detail="retainer_already_active")
+
+    client_email = None
+    try:
+        user_response = supabase.auth.admin.get_user_by_id(retainer["client_id"])
+        client_email = user_response.user.email if user_response and user_response.user else None
+    except Exception:  # noqa: BLE001 — el email es solo para prellenar Checkout, no es crítico
+        pass
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            payment_method_types=["card"],
+            customer_email=client_email,
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": retainer["currency"] or "usd",
+                        "product_data": {"name": retainer["description"]},
+                        "unit_amount": retainer["amount_cents"],
+                        "recurring": {"interval": retainer["billing_interval"]},
+                    },
+                    "quantity": 1,
+                }
+            ],
+            success_url=f"{SITE_URL}/dashboard.html?subscription=success",
+            cancel_url=f"{SITE_URL}/dashboard.html?subscription=canceled",
+            metadata={"retainer_id": retainer["id"]},
+        )
+
+        supabase.table("retainers").update({"stripe_checkout_session_id": session.id}).eq(
+            "id", retainer["id"]
+        ).execute()
+
+        return {"ok": True, "url": session.url}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="internal_error") from exc
+
+
+@app.post("/api/cancel-subscription")
+@limiter.limit("20/15minute")
+async def cancel_subscription(
+    request: Request, payload: RetainerActionPayload, authorization: Optional[str] = Header(default=None)
+):
+    """Cancela un retainer activo. El cliente solo puede cancelar el suyo;
+    el staff puede cancelar cualquiera. La cancelación es inmediata (no
+    "al final del período") para mantener el modelo simple."""
+    user_id = get_authenticated_user_id(authorization)
+
+    try:
+        result = (
+            supabase.table("retainers")
+            .select("id, client_id, status, stripe_subscription_id")
+            .eq("id", payload.retainer_id)
+            .single()
+            .execute()
+        )
+        retainer = result.data
+    except Exception as exc:
+        if getattr(exc, "code", None) == "PGRST116":
+            raise HTTPException(status_code=404, detail="retainer_not_found") from exc
+        logger.error("cancel_subscription lookup error: %s", exc)
+        raise HTTPException(status_code=500, detail="internal_error") from exc
+
+    if not retainer:
+        raise HTTPException(status_code=404, detail="retainer_not_found")
+
+    assert_owner_or_staff(user_id, retainer["client_id"])
+
+    if not retainer["stripe_subscription_id"]:
+        raise HTTPException(status_code=400, detail="retainer_not_active")
+
+    try:
+        stripe.Subscription.delete(retainer["stripe_subscription_id"])
+    except Exception as exc:
+        logger.error("cancel_subscription stripe error: %s", exc)
+        raise HTTPException(status_code=500, detail="internal_error") from exc
+
+    # Actualiza de inmediato para que la UI refleje el cambio sin esperar el
+    # webhook (que igual llegará y confirmará el mismo estado).
+    supabase.table("retainers").update(
+        {"status": "canceled", "canceled_at": datetime.now(timezone.utc).isoformat()}
+    ).eq("id", retainer["id"]).execute()
+
+    return {"ok": True}
+
+
 @app.post("/api/stripe-webhook")
 async def stripe_webhook(request: Request):
     """
@@ -297,7 +475,9 @@ async def stripe_webhook(request: Request):
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        invoice_id = (session.get("metadata") or {}).get("invoice_id")
+        metadata = session.get("metadata") or {}
+
+        invoice_id = metadata.get("invoice_id")
         if invoice_id:
             supabase.table("invoices").update(
                 {
@@ -306,5 +486,45 @@ async def stripe_webhook(request: Request):
                     "stripe_payment_intent_id": session.get("payment_intent"),
                 }
             ).eq("id", invoice_id).execute()
+
+        retainer_id = metadata.get("retainer_id")
+        if retainer_id and session.get("mode") == "subscription":
+            # La primera cobranza de la suscripción se confirmó: guardamos
+            # los ids de Stripe y activamos el retainer. A partir de aquí,
+            # las renovaciones automáticas las reporta customer.subscription.updated.
+            supabase.table("retainers").update(
+                {
+                    "status": "active",
+                    "stripe_subscription_id": session.get("subscription"),
+                    "stripe_customer_id": session.get("customer"),
+                }
+            ).eq("id", retainer_id).execute()
+
+    elif event["type"] == "customer.subscription.updated":
+        subscription = event["data"]["object"]
+        # Stripe usa: active, past_due, canceled, unpaid, incomplete,
+        # incomplete_expired, trialing, paused. Solo nos importan los que
+        # tenemos modelados; el resto (incomplete/trialing/paused) los
+        # dejamos como están hasta que se resuelvan a uno de estos.
+        status_map = {
+            "active": "active",
+            "past_due": "past_due",
+            "canceled": "canceled",
+            "unpaid": "unpaid",
+        }
+        new_status = status_map.get(subscription.get("status"))
+        if new_status:
+            update = {"status": new_status}
+            if new_status == "canceled":
+                update["canceled_at"] = datetime.now(timezone.utc).isoformat()
+            supabase.table("retainers").update(update).eq(
+                "stripe_subscription_id", subscription.get("id")
+            ).execute()
+
+    elif event["type"] == "customer.subscription.deleted":
+        subscription = event["data"]["object"]
+        supabase.table("retainers").update(
+            {"status": "canceled", "canceled_at": datetime.now(timezone.utc).isoformat()}
+        ).eq("stripe_subscription_id", subscription.get("id")).execute()
 
     return {"received": True}

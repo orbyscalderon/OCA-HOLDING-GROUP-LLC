@@ -20,6 +20,7 @@
     on_hold: "En pausa"
   };
   const INVOICE_STATUS_LABELS = { pending: "Pendiente", paid: "Pagada", failed: "Fallida", refunded: "Reembolsada", canceled: "Cancelada" };
+  const RETAINER_STATUS_LABELS = { pending: "Pendiente de activar", active: "Activo", past_due: "Pago atrasado", unpaid: "Sin pagar", canceled: "Cancelado" };
   const PROJECT_TYPE_LABELS = {
     website: "Sitio web",
     webapp: "Aplicación web",
@@ -246,6 +247,37 @@
       .join("");
   }
 
+  async function loadRetainers(supabaseClient) {
+    const { data, error } = await supabaseClient
+      .from("retainers")
+      .select("id, description, amount_cents, currency, billing_interval, status, created_at, profiles(full_name, email)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading retainers:", error);
+      return;
+    }
+
+    const tbody = document.getElementById("retainers-table-body");
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-slate-400">Aún no hay retainers.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data
+      .map(
+        (r) => `
+      <tr>
+        <td class="whitespace-nowrap">${formatDate(r.created_at)}</td>
+        <td>${escapeHtml((r.profiles && (r.profiles.full_name || r.profiles.email)) || "-")}</td>
+        <td>${escapeHtml(r.description)}</td>
+        <td class="whitespace-nowrap font-semibold text-navy">${formatMoney(r.amount_cents, r.currency)} / ${r.billing_interval === "year" ? "año" : "mes"}</td>
+        <td><span class="status-pill bg-slate-100 text-slate-600">${RETAINER_STATUS_LABELS[r.status] || r.status}</span></td>
+      </tr>`
+      )
+      .join("");
+  }
+
   function initNewProjectForm(supabaseClient) {
     const form = document.getElementById("new-project-form");
     form.addEventListener("submit", async (e) => {
@@ -311,6 +343,43 @@
     });
   }
 
+  function initNewRetainerForm(supabaseClient) {
+    const form = document.getElementById("new-retainer-form");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector("[data-submit-button]");
+      btn.disabled = true;
+
+      const email = form.clientEmail.value.trim();
+      const { data: client, error: clientError } = await supabaseClient.from("profiles").select("id").eq("email", email).maybeSingle();
+
+      if (clientError || !client) {
+        showMessage("No se encontró ningún cliente con ese correo. Debe crear su cuenta en el portal primero.", "error");
+        btn.disabled = false;
+        return;
+      }
+
+      const amountCents = Math.round(parseFloat(form.amount.value) * 100);
+      const { error } = await supabaseClient.from("retainers").insert({
+        client_id: client.id,
+        description: form.description.value.trim(),
+        amount_cents: amountCents,
+        currency: "usd",
+        billing_interval: form.billingInterval.value,
+        status: "pending"
+      });
+
+      btn.disabled = false;
+      if (error) {
+        showMessage("No se pudo crear el retainer: " + error.message, "error");
+      } else {
+        showMessage("Retainer creado. El cliente lo verá pendiente de activar en su panel.", "success");
+        form.reset();
+        loadRetainers(supabaseClient);
+      }
+    });
+  }
+
   function initSignOut(supabaseClient) {
     document.getElementById("sign-out-button").addEventListener("click", async () => {
       if (supabaseClient) await supabaseClient.auth.signOut();
@@ -344,7 +413,8 @@
     initTabs();
     initNewProjectForm(supabaseClient);
     initNewInvoiceForm(supabaseClient);
+    initNewRetainerForm(supabaseClient);
 
-    await Promise.all([loadLeads(supabaseClient), loadProjects(supabaseClient), loadInvoices(supabaseClient)]);
+    await Promise.all([loadLeads(supabaseClient), loadProjects(supabaseClient), loadInvoices(supabaseClient), loadRetainers(supabaseClient)]);
   });
 })();

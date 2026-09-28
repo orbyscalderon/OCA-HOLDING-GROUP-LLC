@@ -12,6 +12,7 @@
 --   5. projects           -> proyectos contratados, visibles en el portal de clientes
 --   6. project_updates    -> bitácora de avance de cada proyecto
 --   7. invoices           -> cobros por hito/entregable, vía Stripe Checkout
+--   8. retainers          -> cobro recurrente (mantenimiento), vía Stripe Subscriptions
 -- ============================================================================
 
 create extension if not exists "pgcrypto"; -- para gen_random_uuid()
@@ -222,6 +223,33 @@ create index if not exists idx_invoices_project_id on invoices (project_id);
 create index if not exists idx_invoices_client_id on invoices (client_id);
 create index if not exists idx_invoices_status on invoices (status);
 
+-- ----------------------------------------------------------------------------
+-- 8. RETAINERS — cobro recurrente (ej. mantenimiento mensual), vía Stripe
+--    Subscriptions. A diferencia de `invoices` (pago único), esto se cobra
+--    automáticamente cada período sin que el staff tenga que hacer nada.
+-- ----------------------------------------------------------------------------
+create table if not exists retainers (
+  id                       uuid primary key default gen_random_uuid(),
+  project_id               uuid references projects(id) on delete cascade, -- opcional: puede ser a nivel cuenta
+  client_id                uuid not null references profiles(id),
+  description              text not null,       -- ej. "Mantenimiento mensual — Tienda en línea"
+  amount_cents             integer not null check (amount_cents > 0),
+  currency                 text not null default 'usd',
+  billing_interval          text not null default 'month' check (billing_interval in ('month','year')),
+  status                   text not null default 'pending' check (
+                             status in ('pending','active','past_due','canceled','unpaid')
+                           ),
+  stripe_checkout_session_id text,
+  stripe_subscription_id     text,
+  stripe_customer_id         text,
+  created_at               timestamptz not null default now(),
+  canceled_at              timestamptz
+);
+
+create index if not exists idx_retainers_client_id on retainers (client_id);
+create index if not exists idx_retainers_status on retainers (status);
+create index if not exists idx_retainers_stripe_subscription_id on retainers (stripe_subscription_id);
+
 drop trigger if exists trg_companies_updated_at on companies;
 create trigger trg_companies_updated_at
   before update on companies
@@ -327,3 +355,24 @@ create policy "Staff can update invoices except marking them paid"
 create policy "Staff can view contact requests"
   on contact_requests for select
   using (is_staff_user());
+
+-- RETAINERS: mismo patrón de invoices — el staff puede crear/editar, pero
+-- solo el webhook de Stripe (service_role) puede marcar 'active' un
+-- retainer, porque eso significa que Stripe realmente confirmó la primera
+-- cobranza. Cancelar SÍ lo puede hacer el propio cliente (ver
+-- /api/cancel-subscription en el backend, que valida el JWT del cliente
+-- antes de llamar a Stripe) o el staff, nunca reactivar directamente.
+alter table retainers enable row level security;
+
+create policy "Clients can view their own retainers"
+  on retainers for select
+  using (client_id = auth.uid() or is_staff_user());
+
+create policy "Staff can create retainers"
+  on retainers for insert
+  with check (is_staff_user() and status = 'pending');
+
+create policy "Staff can update retainers except activating them"
+  on retainers for update
+  using (is_staff_user())
+  with check (is_staff_user() and status <> 'active');

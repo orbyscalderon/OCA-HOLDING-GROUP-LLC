@@ -84,6 +84,7 @@
         <button type="button" class="admin-tab" data-admin-tab="leads">Solicitudes de Cotización</button>
         <button type="button" class="admin-tab" data-admin-tab="projects">Proyectos</button>
         <button type="button" class="admin-tab" data-admin-tab="invoices">Facturas</button>
+        <button type="button" class="admin-tab" data-admin-tab="retainers">Retainers</button>
       </div>
 
       <!-- ============ LEADS (solicitudes de cotización) ============ -->
@@ -168,6 +169,53 @@
                   <input type="number" name="amount" required min="1" step="0.01" placeholder="1500.00" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
                 </div>
                 <button type="submit" data-submit-button class="w-full rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors">Crear factura</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ RETAINERS (mantenimiento recurrente) ============ -->
+      <section data-admin-panel="retainers" class="hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2">
+            <h2 class="font-serif text-lg font-semibold text-navy mb-4">Retainers</h2>
+            <p class="text-sm text-slate-500 mb-6">Cobro recurrente automático (ej. mantenimiento mensual). El cliente lo activa desde su panel — aquí solo lo creas como "pendiente"; Stripe lo marca "activo" cuando el cliente paga la primera cobranza.</p>
+            <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+              <table class="admin-table">
+                <thead>
+                  <tr><th>Fecha</th><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estado</th></tr>
+                </thead>
+                <tbody id="retainers-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <div class="rounded-xl border border-slate-200 bg-white p-6 sticky top-24">
+              <h3 class="font-serif text-base font-semibold text-navy mb-4">Nuevo retainer</h3>
+              <form id="new-retainer-form" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-medium text-navy mb-1">Correo del cliente (debe tener cuenta ya creada)</label>
+                  <input type="email" name="clientEmail" required placeholder="cliente@empresa.com" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-navy mb-1">Descripción</label>
+                  <input type="text" name="description" required placeholder="Ej. Mantenimiento mensual" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-medium text-navy mb-1">Monto (USD)</label>
+                    <input type="number" name="amount" required min="1" step="0.01" placeholder="50.00" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-navy mb-1">Frecuencia</label>
+                    <select name="billingInterval" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                      <option value="month">Mensual</option>
+                      <option value="year">Anual</option>
+                    </select>
+                  </div>
+                </div>
+                <button type="submit" data-submit-button class="w-full rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors">Crear retainer</button>
               </form>
             </div>
           </div>

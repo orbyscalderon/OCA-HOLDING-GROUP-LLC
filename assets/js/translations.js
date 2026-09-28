@@ -270,7 +270,21 @@ const translations = {
       paymentSuccessBanner: "¡Pago recibido! Gracias — actualizaremos el estado de tu proyecto en breve.",
       paymentCanceledBanner: "El pago se canceló. Puedes intentarlo de nuevo cuando quieras.",
       configMissingTitle: "Portal en configuración",
-      configMissingText: "El equipo de OCA Holding Group aún está activando esta sección. Vuelve pronto."
+      configMissingText: "El equipo de OCA Holding Group aún está activando esta sección. Vuelve pronto.",
+      retainersTitle: "Planes de mantenimiento",
+      noRetainers: "No tienes ningún plan de mantenimiento activo.",
+      activate: "Activar",
+      cancel: "Cancelar",
+      canceling: "Cancelando...",
+      confirmCancelRetainer: "¿Seguro que quieres cancelar este plan de mantenimiento? Dejará de cobrarse a partir de ahora.",
+      perMonth: "mes",
+      perYear: "año",
+      retainerStatusPending: "Pendiente de activar",
+      retainerStatusActive: "Activo",
+      retainerStatusPastDue: "Pago atrasado",
+      retainerStatusUnpaid: "Sin pagar",
+      retainerStatusCanceled: "Cancelado",
+      subscriptionSuccessBanner: "¡Plan de mantenimiento activado! Gracias — se cobrará automáticamente cada período."
     },
     legal: {
       terms: {
@@ -587,7 +601,21 @@ const translations = {
       paymentSuccessBanner: "Payment received! Thank you — we'll update your project status shortly.",
       paymentCanceledBanner: "Payment was canceled. You can try again anytime.",
       configMissingTitle: "Portal being configured",
-      configMissingText: "The OCA Holding Group team is still activating this section. Check back soon."
+      configMissingText: "The OCA Holding Group team is still activating this section. Check back soon.",
+      retainersTitle: "Maintenance plans",
+      noRetainers: "You don't have any active maintenance plans.",
+      activate: "Activate",
+      cancel: "Cancel",
+      canceling: "Canceling...",
+      confirmCancelRetainer: "Are you sure you want to cancel this maintenance plan? It will stop billing from now on.",
+      perMonth: "month",
+      perYear: "year",
+      retainerStatusPending: "Pending activation",
+      retainerStatusActive: "Active",
+      retainerStatusPastDue: "Past due",
+      retainerStatusUnpaid: "Unpaid",
+      retainerStatusCanceled: "Canceled",
+      subscriptionSuccessBanner: "Maintenance plan activated! Thank you — it will bill automatically each period."
     },
     legal: {
       terms: {
