@@ -269,6 +269,16 @@
     const isRecoveryFlow = window.location.hash.indexOf("type=recovery") !== -1;
     supabaseClient.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
+        // Fija la sesión temporal explícitamente en vez de confiar en que
+        // detectSessionInUrl la haya persistido a tiempo — sin esto, algunos
+        // navegadores/extensiones reportan "Auth session missing!" al
+        // guardar la nueva contraseña unos segundos después.
+        if (session) {
+          supabaseClient.auth.setSession({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token
+          });
+        }
         showResetPasswordForm();
         return;
       }
