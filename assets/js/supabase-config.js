@@ -20,7 +20,10 @@ window.OCA_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ
 
 // URL base del backend (Node o FastAPI) donde vive /api/create-checkout-session.
 // En desarrollo local suele ser http://localhost:3001
-window.OCA_API_BASE_URL = "https://api.ocaholdinggroup.com"; // Railway (backend/), DNS -> Cloudflare CNAME
+// api.ocaholdinggroup.com quedó atascado en Railway (custom domain no resuelve
+// pese a DNS propagado); usando el dominio *.up.railway.app directo mientras
+// tanto. Cambiar de vuelta cuando Railway resuelva el custom domain.
+window.OCA_API_BASE_URL = "https://oca-holding-group-llc-production.up.railway.app";
 
 window.OCA_SUPABASE_CONFIGURED =
   window.OCA_SUPABASE_URL.indexOf("YOUR-PROJECT-REF") === -1 &&
