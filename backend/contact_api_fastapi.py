@@ -122,6 +122,33 @@ def assert_owner_or_staff(user_id: str, resource_client_id: str) -> None:
     raise HTTPException(status_code=403, detail="forbidden")
 
 
+def send_transactional_email(to: str, subject: str, text: str) -> None:
+    """Envía un correo transaccional (confirmación al cliente, aviso de pago).
+    A diferencia de la notificación interna al staff, un fallo aquí no debe
+    tumbar la petición que lo dispara — el registro o el pago ya se
+    confirmaron/guardaron en la base de datos — así que solo se registra."""
+    try:
+        resend.Emails.send(
+            {
+                "from": "OCA Holding Group <no-reply@ocaholdinggroup.com>",
+                "to": to,
+                "subject": subject,
+                "text": text,
+            }
+        )
+    except Exception:  # noqa: BLE001 — un correo fallido no debe romper el flujo principal
+        logger.exception("No se pudo enviar el correo '%s' a %s", subject, to)
+
+
+def get_client_email(client_id: str) -> Optional[str]:
+    try:
+        profile = supabase.table("profiles").select("email").eq("id", client_id).single().execute()
+        return profile.data.get("email") if profile.data else None
+    except Exception:  # noqa: BLE001 — sin email no se notifica, pero el pago ya quedó registrado
+        logger.exception("No se pudo obtener el email del cliente %s", client_id)
+        return None
+
+
 # Mapea el valor de "department" enviado por el frontend (assets/js/main.js)
 # al subject_type esperado por la base de datos.
 DEPARTMENT_TO_SUBJECT_TYPE = {
@@ -220,22 +247,41 @@ async def create_contact_request(request: Request, payload: ContactPayload):
                 f"Referencias: {project.references or '-'}"
             )
 
-        resend.Emails.send(
-            {
-                "from": "OCA Holding Group <no-reply@ocaholdinggroup.com>",
-                "to": NOTIFY_TO_EMAIL,
-                "reply_to": payload.email,
-                "subject": f"[{subject_type}] Nuevo contacto de {payload.full_name}",
-                "text": (
-                    f"Departamento: {subject_type}\n"
-                    f"Nombre: {payload.full_name}\n"
-                    f"Email: {payload.email}\n"
-                    f"Empresa: {payload.company or '-'}\n"
-                    f"Teléfono: {payload.phone or '-'}\n\n"
-                    f"Mensaje:\n{payload.message}"
-                    f"{brief_text}"
-                ),
-            }
+        try:
+            resend.Emails.send(
+                {
+                    "from": "OCA Holding Group <no-reply@ocaholdinggroup.com>",
+                    "to": NOTIFY_TO_EMAIL,
+                    "reply_to": payload.email,
+                    "subject": f"[{subject_type}] Nuevo contacto de {payload.full_name}",
+                    "text": (
+                        f"Departamento: {subject_type}\n"
+                        f"Nombre: {payload.full_name}\n"
+                        f"Email: {payload.email}\n"
+                        f"Empresa: {payload.company or '-'}\n"
+                        f"Teléfono: {payload.phone or '-'}\n\n"
+                        f"Mensaje:\n{payload.message}"
+                        f"{brief_text}"
+                    ),
+                }
+            )
+        except Exception:  # noqa: BLE001 — la solicitud ya se guardó; un correo fallido no la invalida
+            logger.exception("No se pudo notificar al staff sobre la solicitud %s", inserted_id)
+
+        send_transactional_email(
+            to=payload.email,
+            subject="Recibimos tu solicitud — OCA Holding Group / We received your request",
+            text=(
+                f"Hola {payload.full_name},\n\n"
+                "Recibimos tu solicitud y te contactaremos en menos de 1 día hábil.\n"
+                "Si tienes algo que agregar, simplemente responde este correo.\n\n"
+                "— Equipo OCA Holding Group\n\n"
+                "----------\n\n"
+                f"Hi {payload.full_name},\n\n"
+                "We received your request and will get back to you within 1 business day.\n"
+                "If you'd like to add anything, just reply to this email.\n\n"
+                "— OCA Holding Group Team"
+            ),
         )
 
         return {"ok": True, "id": inserted_id}
@@ -479,26 +525,77 @@ async def stripe_webhook(request: Request):
 
         invoice_id = metadata.get("invoice_id")
         if invoice_id:
-            supabase.table("invoices").update(
-                {
-                    "status": "paid",
-                    "paid_at": datetime.now(timezone.utc).isoformat(),
-                    "stripe_payment_intent_id": session.get("payment_intent"),
-                }
-            ).eq("id", invoice_id).execute()
+            invoice_row = (
+                supabase.table("invoices")
+                .update(
+                    {
+                        "status": "paid",
+                        "paid_at": datetime.now(timezone.utc).isoformat(),
+                        "stripe_payment_intent_id": session.get("payment_intent"),
+                    }
+                )
+                .eq("id", invoice_id)
+                .execute()
+            )
+            if invoice_row.data:
+                invoice = invoice_row.data[0]
+                client_email = get_client_email(invoice["client_id"])
+                if client_email:
+                    amount = invoice["amount_cents"] / 100
+                    send_transactional_email(
+                        to=client_email,
+                        subject="Pago confirmado — OCA Holding Group / Payment confirmed",
+                        text=(
+                            f"Confirmamos tu pago de ${amount:,.2f} {invoice['currency'].upper()} "
+                            f"por: {invoice['description']}.\n\n"
+                            "— Equipo OCA Holding Group\n\n"
+                            "----------\n\n"
+                            f"We confirmed your payment of ${amount:,.2f} {invoice['currency'].upper()} "
+                            f"for: {invoice['description']}.\n\n"
+                            "— OCA Holding Group Team"
+                        ),
+                    )
 
         retainer_id = metadata.get("retainer_id")
         if retainer_id and session.get("mode") == "subscription":
             # La primera cobranza de la suscripción se confirmó: guardamos
             # los ids de Stripe y activamos el retainer. A partir de aquí,
             # las renovaciones automáticas las reporta customer.subscription.updated.
-            supabase.table("retainers").update(
-                {
-                    "status": "active",
-                    "stripe_subscription_id": session.get("subscription"),
-                    "stripe_customer_id": session.get("customer"),
-                }
-            ).eq("id", retainer_id).execute()
+            retainer_row = (
+                supabase.table("retainers")
+                .update(
+                    {
+                        "status": "active",
+                        "stripe_subscription_id": session.get("subscription"),
+                        "stripe_customer_id": session.get("customer"),
+                    }
+                )
+                .eq("id", retainer_id)
+                .execute()
+            )
+            if retainer_row.data:
+                retainer = retainer_row.data[0]
+                client_email = get_client_email(retainer["client_id"])
+                if client_email:
+                    amount = retainer["amount_cents"] / 100
+                    interval_es = "mes" if retainer["billing_interval"] == "month" else "año"
+                    send_transactional_email(
+                        to=client_email,
+                        subject="Retainer activado — OCA Holding Group / Retainer activated",
+                        text=(
+                            f"Tu retainer de mantenimiento quedó activo: {retainer['description']} "
+                            f"(${amount:,.2f} {retainer['currency'].upper()} por {interval_es}). "
+                            "Se cobrará automáticamente cada período — puedes cancelarlo cuando "
+                            "quieras desde tu panel.\n\n"
+                            "— Equipo OCA Holding Group\n\n"
+                            "----------\n\n"
+                            f"Your maintenance retainer is now active: {retainer['description']} "
+                            f"(${amount:,.2f} {retainer['currency'].upper()} per {retainer['billing_interval']}). "
+                            "It will bill automatically each period — you can cancel anytime from "
+                            "your dashboard.\n\n"
+                            "— OCA Holding Group Team"
+                        ),
+                    )
 
     elif event["type"] == "customer.subscription.updated":
         subscription = event["data"]["object"]
