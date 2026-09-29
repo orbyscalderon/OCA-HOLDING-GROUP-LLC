@@ -122,20 +122,53 @@ def assert_owner_or_staff(user_id: str, resource_client_id: str) -> None:
     raise HTTPException(status_code=403, detail="forbidden")
 
 
-def send_transactional_email(to: str, subject: str, text: str) -> None:
+EMAIL_NAVY = "#0B1F3A"
+EMAIL_GOLD = "#B8963E"
+EMAIL_PAPER = "#F7F5F1"
+
+
+def render_email_html(body_html: str) -> str:
+    """Envuelve el contenido de un correo en la plantilla con marca (navy/dorado,
+    misma paleta que el sitio — ver tailwind.config en index.html). Estilos
+    inline porque la mayoría de clientes de correo ignoran <style> externo."""
+    return f"""\
+<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:{EMAIL_PAPER};font-family:Georgia,'Times New Roman',serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{EMAIL_PAPER};padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:8px;overflow:hidden;">
+        <tr><td style="background:{EMAIL_NAVY};padding:24px 32px;">
+          <span style="font-size:20px;font-weight:bold;color:#ffffff;letter-spacing:.02em;">OCA <span style="color:{EMAIL_GOLD};">Holding</span> Group</span>
+        </td></tr>
+        <tr><td style="padding:32px;color:#2E2E33;font-size:15px;line-height:1.6;">
+          {body_html}
+        </td></tr>
+        <tr><td style="padding:20px 32px;background:{EMAIL_PAPER};border-top:1px solid #E4E0D6;color:#6B6B62;font-size:12px;">
+          OCA Holding Group LLC — 30 N Gould St, STE R, Sheridan, WY 82801, USA
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+
+def send_transactional_email(to: str, subject: str, text: str, html_body: Optional[str] = None) -> None:
     """Envía un correo transaccional (confirmación al cliente, aviso de pago).
     A diferencia de la notificación interna al staff, un fallo aquí no debe
     tumbar la petición que lo dispara — el registro o el pago ya se
     confirmaron/guardaron en la base de datos — así que solo se registra."""
     try:
-        resend.Emails.send(
-            {
-                "from": "OCA Holding Group <no-reply@ocaholdinggroup.com>",
-                "to": to,
-                "subject": subject,
-                "text": text,
-            }
-        )
+        message = {
+            "from": "OCA Holding Group <no-reply@ocaholdinggroup.com>",
+            "to": to,
+            "subject": subject,
+            "text": text,
+        }
+        if html_body:
+            message["html"] = render_email_html(html_body)
+        resend.Emails.send(message)
     except Exception:  # noqa: BLE001 — un correo fallido no debe romper el flujo principal
         logger.exception("No se pudo enviar el correo '%s' a %s", subject, to)
 
@@ -281,6 +314,17 @@ async def create_contact_request(request: Request, payload: ContactPayload):
                 "We received your request and will get back to you within 1 business day.\n"
                 "If you'd like to add anything, just reply to this email.\n\n"
                 "— OCA Holding Group Team"
+            ),
+            html_body=(
+                f"<p>Hola {payload.full_name},</p>"
+                "<p>Recibimos tu solicitud y te contactaremos en menos de 1 día hábil. "
+                "Si tienes algo que agregar, simplemente responde este correo.</p>"
+                "<p>— Equipo OCA Holding Group</p>"
+                "<hr style=\"border:none;border-top:1px solid #E4E0D6;margin:24px 0;\">"
+                f"<p>Hi {payload.full_name},</p>"
+                "<p>We received your request and will get back to you within 1 business day. "
+                "If you'd like to add anything, just reply to this email.</p>"
+                "<p>— OCA Holding Group Team</p>"
             ),
         )
 
@@ -554,6 +598,15 @@ async def stripe_webhook(request: Request):
                             f"for: {invoice['description']}.\n\n"
                             "— OCA Holding Group Team"
                         ),
+                        html_body=(
+                            f"<p>Confirmamos tu pago de <strong>${amount:,.2f} {invoice['currency'].upper()}</strong> "
+                            f"por: {invoice['description']}.</p>"
+                            "<p>— Equipo OCA Holding Group</p>"
+                            "<hr style=\"border:none;border-top:1px solid #E4E0D6;margin:24px 0;\">"
+                            f"<p>We confirmed your payment of <strong>${amount:,.2f} {invoice['currency'].upper()}</strong> "
+                            f"for: {invoice['description']}.</p>"
+                            "<p>— OCA Holding Group Team</p>"
+                        ),
                     )
 
         retainer_id = metadata.get("retainer_id")
@@ -594,6 +647,19 @@ async def stripe_webhook(request: Request):
                             "It will bill automatically each period — you can cancel anytime from "
                             "your dashboard.\n\n"
                             "— OCA Holding Group Team"
+                        ),
+                        html_body=(
+                            f"<p>Tu retainer de mantenimiento quedó activo: <strong>{retainer['description']}</strong> "
+                            f"(${amount:,.2f} {retainer['currency'].upper()} por {interval_es}). "
+                            "Se cobrará automáticamente cada período — puedes cancelarlo cuando quieras "
+                            "desde tu panel.</p>"
+                            "<p>— Equipo OCA Holding Group</p>"
+                            "<hr style=\"border:none;border-top:1px solid #E4E0D6;margin:24px 0;\">"
+                            f"<p>Your maintenance retainer is now active: <strong>{retainer['description']}</strong> "
+                            f"(${amount:,.2f} {retainer['currency'].upper()} per {retainer['billing_interval']}). "
+                            "It will bill automatically each period — you can cancel anytime from your "
+                            "dashboard.</p>"
+                            "<p>— OCA Holding Group Team</p>"
                         ),
                     )
 
