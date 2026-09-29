@@ -261,11 +261,18 @@
   // contraseña" — ambos casos crean una sesión, pero requieren manejo distinto.
   function initAuthStateListener(supabaseClient) {
     if (!supabaseClient) return;
+    // Supabase dispara INITIAL_SESSION (a veces antes que PASSWORD_RECOVERY)
+    // apenas detecta una sesión en la URL — incluida la sesión temporal que
+    // crea un link de recuperación. Sin este chequeo, esa sesión temporal
+    // dispara el redirect normal (admin/dashboard) antes de que el usuario
+    // llegue a ver el formulario de nueva contraseña.
+    const isRecoveryFlow = window.location.hash.indexOf("type=recovery") !== -1;
     supabaseClient.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         showResetPasswordForm();
         return;
       }
+      if (isRecoveryFlow) return;
       if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
         redirectAfterAuth(supabaseClient, session);
       }
