@@ -144,6 +144,12 @@
     });
   }
 
+  // Email para el que se pidió recuperación — lo necesita verifyOtp() más
+  // abajo (código + email, no alcanza con el código solo). Si el usuario
+  // llega directo por el link del correo en vez de pasar por acá primero,
+  // initAuthStateListener lo completa con session.user.email.
+  let pendingRecoveryEmail = null;
+
   function initForgotPassword(supabaseClient) {
     const link = document.getElementById("forgot-password-link");
     if (!link) return;
@@ -157,13 +163,19 @@
       await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + "/login.html"
       });
-      showMessage(messageBox, t("login.forgotPasswordSent"), "success");
+      pendingRecoveryEmail = email;
+      // Se muestra el formulario de inmediato (no se espera a que el
+      // usuario le dé clic al link del correo): pide el código de 6
+      // dígitos que llega en el mismo correo. Ver nota en login.html sobre
+      // por qué no se depende del link.
+      showResetPasswordForm();
     });
   }
 
-  // Muestra el formulario de "nueva contraseña" y oculta el resto — usado
-  // cuando Supabase confirma que el visitante llegó desde un enlace de
-  // recuperación válido (evento PASSWORD_RECOVERY, ver initAuthStateListener).
+  // Muestra el formulario de "nueva contraseña" y oculta el resto — se usa
+  // apenas se pide la recuperación (no hace falta el link del correo) y
+  // también si el visitante igual le da clic al link (evento
+  // PASSWORD_RECOVERY, ver initAuthStateListener).
   function showResetPasswordForm() {
     const tabs = document.querySelector(".flex.rounded-full.bg-paper");
     const signinForm = document.getElementById("signin-form");
@@ -182,7 +194,27 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (!pendingRecoveryEmail) {
+        showMessage(messageBox, t("login.errorGeneric"), "error");
+        return;
+      }
+
       setSubmitting(form, true);
+
+      // Autentica con el código de 6 dígitos (no con el link) — esto es lo
+      // que evita el problema de escáneres de correo "pre-visitando" el
+      // link y dejando el token ya usado antes de que el usuario lo abra.
+      const { error: verifyError } = await supabaseClient.auth.verifyOtp({
+        email: pendingRecoveryEmail,
+        token: form.code.value.trim(),
+        type: "recovery"
+      });
+      if (verifyError) {
+        setSubmitting(form, false);
+        showMessage(messageBox, t("login.errorInvalidCode"), "error");
+        return;
+      }
+
       const { error } = await supabaseClient.auth.updateUser({ password: form.newPassword.value });
       setSubmitting(form, false);
 
@@ -269,15 +301,13 @@
     const isRecoveryFlow = window.location.hash.indexOf("type=recovery") !== -1;
     supabaseClient.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
-        // Fija la sesión temporal explícitamente en vez de confiar en que
-        // detectSessionInUrl la haya persistido a tiempo — sin esto, algunos
-        // navegadores/extensiones reportan "Auth session missing!" al
-        // guardar la nueva contraseña unos segundos después.
-        if (session) {
-          supabaseClient.auth.setSession({
-            access_token: session.access_token,
-            refresh_token: session.refresh_token
-          });
+        // El formulario ahora se autentica con el código de 6 dígitos
+        // (verifyOtp en initResetPasswordForm), no con esta sesión temporal
+        // del link — solo se usa para saber a qué email pertenece el código,
+        // por si el usuario llegó directo por el link sin pasar antes por
+        // "olvidé mi contraseña" en esta misma carga de página.
+        if (session && session.user && session.user.email && !pendingRecoveryEmail) {
+          pendingRecoveryEmail = session.user.email;
         }
         showResetPasswordForm();
         return;
