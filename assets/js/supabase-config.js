@@ -28,3 +28,12 @@ window.OCA_API_BASE_URL = "https://oca-holding-group-llc-production.up.railway.a
 window.OCA_SUPABASE_CONFIGURED =
   window.OCA_SUPABASE_URL.indexOf("YOUR-PROJECT-REF") === -1 &&
   window.OCA_SUPABASE_ANON_KEY.indexOf("YOUR_ANON_PUBLIC_KEY") === -1;
+
+// "Continuar con Google" en login.html (flujo client-side, sin redirect URI:
+// ver assets/js/auth.js -> signInWithIdToken). Es público, no es secreto.
+// Cómo obtenerlo: console.cloud.google.com -> APIs & Services -> Credentials
+//   -> Create Credentials -> OAuth client ID -> Web application
+//   -> Authorized JavaScript origins: https://ocaholdinggroup.com
+// Mientras siga con el valor placeholder, el botón de Google no se muestra.
+window.OCA_GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+window.OCA_GOOGLE_CONFIGURED = window.OCA_GOOGLE_CLIENT_ID.indexOf("YOUR_GOOGLE_CLIENT_ID") === -1;

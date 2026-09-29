@@ -197,6 +197,59 @@
     });
   }
 
+  // "Continuar con Google": flujo client-side de Google Identity Services
+  // (mismo patrón que usan otros proyectos OCA) — el navegador obtiene el ID
+  // token directo de Google y se lo pasa a Supabase vía signInWithIdToken.
+  // A diferencia de supabaseClient.auth.signInWithOAuth(), esto NO redirige
+  // a ningún dominio de Supabase: no hay "redirect URI" que configurar en
+  // Google Cloud Console, solo "Authorized JavaScript origins" con el
+  // dominio real del sitio. El script de Google carga con async/defer, así
+  // que puede no estar listo todavía cuando corre DOMContentLoaded — se
+  // reintenta unas cuantas veces antes de rendirse en silencio.
+  function initGoogleSignIn(supabaseClient, attemptsLeft) {
+    if (attemptsLeft === undefined) attemptsLeft = 20;
+    if (!supabaseClient || !window.OCA_GOOGLE_CONFIGURED) return;
+
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      if (attemptsLeft <= 0) return; // Google Identity Services no cargó — se deja el botón oculto
+      setTimeout(() => initGoogleSignIn(supabaseClient, attemptsLeft - 1), 250);
+      return;
+    }
+
+    const wrap = document.getElementById("google-signin-wrap");
+    const buttonEl = document.getElementById("google-signin-button");
+    if (!wrap || !buttonEl) return;
+
+    google.accounts.id.initialize({
+      client_id: window.OCA_GOOGLE_CLIENT_ID,
+      callback: async (response) => {
+        const messageBox = document.getElementById("form-message");
+        const { error } = await supabaseClient.auth.signInWithIdToken({
+          provider: "google",
+          token: response.credential
+        });
+        if (error) {
+          showMessage(messageBox, error.message || t("login.errorGeneric"), "error");
+          return;
+        }
+        // La redirección (admin.html vs dashboard.html) la maneja
+        // initAuthStateListener al recibir el evento SIGNED_IN.
+      }
+    });
+
+    google.accounts.id.renderButton(buttonEl, {
+      type: "standard",
+      theme: "outline",
+      size: "large",
+      shape: "pill",
+      width: 320,
+      text: "continue_with",
+      locale: getLang()
+    });
+
+    wrap.classList.remove("hidden");
+  }
+
   async function redirectAfterAuth(supabaseClient, session) {
     const { data: profile } = await supabaseClient.from("profiles").select("is_staff").eq("id", session.user.id).single();
     window.location.href = profile && profile.is_staff ? "admin.html" : "dashboard.html";
@@ -228,5 +281,6 @@
     initForgotPassword(supabaseClient);
     initResetPasswordForm(supabaseClient);
     initAuthStateListener(supabaseClient);
+    initGoogleSignIn(supabaseClient);
   });
 })();
