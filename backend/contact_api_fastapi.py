@@ -408,6 +408,10 @@ async def create_checkout_session(
             success_url=f"{SITE_URL}/dashboard.html?payment=success",
             cancel_url=f"{SITE_URL}/dashboard.html?payment=canceled",
             metadata={"invoice_id": invoice["id"]},
+            # Descriptor en el estado de cuenta del cliente para pagos únicos
+            # (facturas/hitos) — distingue estos cargos de OCA Ruta/Destino TV,
+            # que usan sus propios descriptores en la misma cuenta de Stripe.
+            payment_intent_data={"statement_descriptor": "OCA HGLLC"},
         )
 
         supabase.table("invoices").update({"stripe_checkout_session_id": session.id}).eq(
