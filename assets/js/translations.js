@@ -197,7 +197,7 @@ const translations = {
       hqEyebrow: "Sede principal",
       hqTitle: "Oficina Corporativa — Estados Unidos",
       hqAddress: "30 N Gould St, STE R, Sheridan, WY 82801, Estados Unidos",
-      hqPhone: "+1 (302) 555-0148",
+      hqPhone: "+1 849 452 8313 (WhatsApp)",
       hqEmail: "info@ocaholdinggroup.com",
       processEyebrow: "Qué sigue",
       processTitle: "Después de escribirnos",
@@ -317,7 +317,9 @@ const translations = {
         s8Title: "8. Ley Aplicable y Jurisdicción",
         s8Text: "Estos Términos se rigen por las leyes del Estado de Wyoming, Estados Unidos, sin perjuicio de sus normas sobre conflicto de leyes. Cualquier disputa se someterá a los tribunales competentes de dicho Estado.",
         s9Title: "9. Contacto",
-        s9Text: "Para consultas relacionadas con estos Términos, puede escribirnos a legal@ocaholdinggroup.com."
+        s9Text: "Para consultas relacionadas con estos Términos, puede escribirnos a legal@ocaholdinggroup.com.",
+        s10Title: "10. Pagos, Reembolsos y Cancelaciones",
+        s10Text: "OCA Holding Group LLC es una sociedad matriz que opera distintos productos digitales propios (incluyendo, entre otros, OCA Ruta y Destino TV) además de ofrecer servicios de desarrollo a clientes; todos los cobros, sin importar el producto o servicio, se procesan mediante la misma cuenta de Stripe a nombre de OCA Holding Group LLC. Los pagos por proyectos de desarrollo se rigen por lo acordado en la propuesta o cotización correspondiente; los anticipos y pagos por hitos ya entregados no son reembolsables una vez iniciado el trabajo, salvo acuerdo expreso por escrito. Las suscripciones a nuestros productos propios o a un servicio recurrente de mantenimiento (retainer) pueden cancelarse en cualquier momento desde el portal o panel correspondiente; la cancelación aplica a partir del siguiente período de facturación y no genera reembolsos por el período ya cobrado. Para disputas o reembolsos relacionados con un cobro, contáctenos en info@ocaholdinggroup.com."
       },
       privacy: {
         title: "Política de Privacidad",
@@ -537,7 +539,7 @@ const translations = {
       hqEyebrow: "Headquarters",
       hqTitle: "Corporate Office — United States",
       hqAddress: "30 N Gould St, STE R, Sheridan, WY 82801, United States",
-      hqPhone: "+1 (302) 555-0148",
+      hqPhone: "+1 849 452 8313 (WhatsApp)",
       hqEmail: "info@ocaholdinggroup.com",
       processEyebrow: "What's next",
       processTitle: "After you reach out",
@@ -657,7 +659,9 @@ const translations = {
         s8Title: "8. Governing Law and Jurisdiction",
         s8Text: "These Terms are governed by the laws of the State of Wyoming, United States, without regard to its conflict-of-laws principles. Any dispute shall be submitted to the competent courts of that State.",
         s9Title: "9. Contact",
-        s9Text: "For questions regarding these Terms, please contact legal@ocaholdinggroup.com."
+        s9Text: "For questions regarding these Terms, please contact legal@ocaholdinggroup.com.",
+        s10Title: "10. Payments, Refunds, and Cancellations",
+        s10Text: "OCA Holding Group LLC is a parent company that operates several of its own digital products (including, among others, OCA Ruta and Destino TV) in addition to offering development services to clients; all charges, regardless of product or service, are processed through the same Stripe account under OCA Holding Group LLC. Payments for development projects are governed by the terms agreed in the corresponding proposal or quote; deposits and payments for milestones already delivered are non-refundable once work has begun, except by express written agreement. Subscriptions to our own products or to a recurring maintenance service (retainer) may be canceled at any time from the applicable portal or dashboard; cancellation takes effect at the start of the next billing period and does not generate refunds for the period already charged. For disputes or refunds related to a charge, contact us at info@ocaholdinggroup.com."
       },
       privacy: {
         title: "Privacy Policy",
