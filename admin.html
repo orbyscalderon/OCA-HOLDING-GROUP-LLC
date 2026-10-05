@@ -6,6 +6,9 @@
      publicar avances, y crear/gestionar facturas (el estado 'paid' solo lo
      asigna el webhook de Stripe, nunca este panel — ver backend/schema.sql).
      Herramienta interna: sin selector de idioma, en español únicamente.
+     Layout: sidebar fija en escritorio (data-admin-tab), barra de pestañas
+     horizontal en móvil — ambas disparan el mismo [data-admin-tab] que ya
+     lee admin.js, así que no hace falta tocar su lógica de pestañas.
      ========================================================================== -->
 <!DOCTYPE html>
 <html lang="es">
@@ -46,28 +49,48 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <style>
-  .admin-tab { padding: 10px 18px; font-size: 14px; font-weight: 600; border-radius: 9999px; color: #2E2E33; }
-  .admin-tab.is-active { background: #0B1F3A; color: #fff; }
+  /* ---------- Navegación ---------- */
+  .admin-nav-link { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 500; color: #B9C2D4; transition: background-color .15s, color .15s; text-align: left; }
+  .admin-nav-link:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .admin-nav-link.is-active { background: rgba(184,150,62,.15); color: #D9C088; }
+  .admin-nav-link svg { flex-shrink: 0; }
+
+  .admin-tab-mobile { padding: 9px 16px; font-size: 13px; font-weight: 600; border-radius: 9999px; color: #2E2E33; white-space: nowrap; }
+  .admin-tab-mobile.is-active { background: #0B1F3A; color: #fff; }
+
+  /* ---------- Tablas ---------- */
   table.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  table.admin-table th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #8a8a80; border-bottom: 2px solid #0B1F3A; }
-  table.admin-table td { padding: 10px 12px; border-bottom: 1px solid #E4E0D6; vertical-align: top; }
-  .status-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  table.admin-table th { text-align: left; padding: 11px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; color: #8a8a80; background: #FAF9F6; border-bottom: 1px solid #E4E0D6; }
+  table.admin-table th:first-child { border-top-left-radius: 12px; }
+  table.admin-table th:last-child { border-top-right-radius: 12px; }
+  table.admin-table td { padding: 13px 16px; border-bottom: 1px solid #F0EEE7; vertical-align: top; color: #2E2E33; }
+  table.admin-table tbody tr:last-child td { border-bottom: none; }
+  table.admin-table tbody tr:hover td { background: #FAF9F6; }
+  table.admin-table tbody tr.admin-empty-row:hover td { background: transparent; }
+
+  /* ---------- Badges de estado (mismos colores que dashboard.html) ---------- */
+  .status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
+  .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+  .status-brief_received, .status-pending { background: #FDF2E9; color: #B8963E; }
+  .status-in_design { background: #EEF2F7; color: #445069; }
+  .status-in_development { background: #E8F0FE; color: #1D4ED8; }
+  .status-in_review { background: #FEF3C7; color: #92400E; }
+  .status-delivered, .status-paid, .status-active { background: #DCFCE7; color: #166534; }
+  .status-on_hold, .status-refunded, .status-canceled { background: #F1F1EF; color: #6B6B62; }
+  .status-failed, .status-past_due, .status-unpaid { background: #FEE2E2; color: #991B1B; }
+
+  /* ---------- Tarjetas de resumen ---------- */
+  .stat-card { background: #fff; border: 1px solid #E4E0D6; border-radius: 14px; padding: 20px 22px; }
+  .stat-card .stat-value { font-family: "Playfair Display", serif; font-size: 28px; font-weight: 600; color: #0B1F3A; line-height: 1.1; }
+  .stat-card .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #8a8a80; margin-top: 6px; }
+
+  /* ---------- Estado vacío ---------- */
+  .admin-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 48px 24px; text-align: center; color: #9a9a90; }
+  .admin-empty-state svg { width: 36px; height: 36px; color: #D9C088; opacity: .7; }
 </style>
 </head>
 
 <body class="bg-paper text-graphite font-sans antialiased">
-
-  <header class="sticky top-0 z-40 bg-white border-b border-slate-200">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-      <div class="flex h-16 items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <img src="assets/img/logo-icon.svg" alt="OCA Holding Group LLC" class="h-8 w-8">
-          <span class="font-serif text-base font-semibold text-navy">Panel Admin</span>
-        </div>
-        <button type="button" id="sign-out-button" class="rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-navy hover:border-navy transition-colors">Cerrar sesión</button>
-      </div>
-    </div>
-  </header>
 
   <div id="access-denied" class="hidden mx-auto max-w-xl px-4 py-24 text-center">
     <h1 class="font-serif text-xl font-semibold text-navy mb-2">Acceso restringido</h1>
@@ -75,155 +98,262 @@
     <a href="dashboard.html" class="mt-6 inline-block rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white">Ir a mi panel</a>
   </div>
 
-  <main id="admin-content" class="hidden py-10">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+  <div id="admin-content" class="hidden lg:flex lg:min-h-screen">
 
-      <div id="admin-message" class="hidden rounded-lg p-4 text-sm mb-6"></div>
-
-      <div class="flex flex-wrap gap-2 mb-8">
-        <button type="button" class="admin-tab" data-admin-tab="leads">Solicitudes de Cotización</button>
-        <button type="button" class="admin-tab" data-admin-tab="projects">Proyectos</button>
-        <button type="button" class="admin-tab" data-admin-tab="invoices">Facturas</button>
-        <button type="button" class="admin-tab" data-admin-tab="retainers">Retainers</button>
+    <!-- ============ SIDEBAR (escritorio) ============ -->
+    <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 bg-navy text-white">
+      <div class="h-20 flex items-center gap-2.5 px-6 border-b border-white/10 shrink-0">
+        <img src="assets/img/logo-icon.svg" alt="OCA Holding Group LLC" class="h-8 w-8">
+        <div class="leading-tight">
+          <span class="block font-serif text-sm font-semibold">OCA <span class="text-gold-light">Holding</span></span>
+          <span class="block text-[11px] uppercase tracking-widest text-white/40">Panel Admin</span>
+        </div>
       </div>
+      <nav class="flex-1 px-3 py-6 space-y-1">
+        <button type="button" data-admin-tab="leads" class="admin-nav-link">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 7.5l8.25 6 8.25-6M4.5 18.75h15a1.5 1.5 0 001.5-1.5V6.75a1.5 1.5 0 00-1.5-1.5h-15a1.5 1.5 0 00-1.5 1.5v10.5a1.5 1.5 0 001.5 1.5z"/></svg>
+          <span>Solicitudes</span>
+        </button>
+        <button type="button" data-admin-tab="projects" class="admin-nav-link">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5a1.5 1.5 0 011.5-1.5h4.19a1.5 1.5 0 011.06.44l1.5 1.5a1.5 1.5 0 001.06.44H19.5a1.5 1.5 0 011.5 1.5v8.62a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18.5v-11z"/></svg>
+          <span>Proyectos</span>
+        </button>
+        <button type="button" data-admin-tab="invoices" class="admin-nav-link">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3.75h8.69a1.5 1.5 0 011.06.44l2.06 2.06a1.5 1.5 0 01.44 1.06V19.5a.75.75 0 01-.75.75H7a1.5 1.5 0 01-1.5-1.5V5.25A1.5 1.5 0 017 3.75zM8.25 9h7.5M8.25 12.75h7.5M8.25 16.5h4.5"/></svg>
+          <span>Facturas</span>
+        </button>
+        <button type="button" data-admin-tab="retainers" class="admin-nav-link">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+          <span>Retainers</span>
+        </button>
+      </nav>
+      <div class="p-4 border-t border-white/10 shrink-0">
+        <button type="button" id="sign-out-button" class="w-full flex items-center justify-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 hover:bg-white/5 hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M18 12H9m9 0l-3-3m3 3l-3 3"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </aside>
 
-      <!-- ============ LEADS (solicitudes de cotización) ============ -->
-      <section data-admin-panel="leads" class="hidden">
-        <p class="text-sm text-slate-500 mb-6">Cotizaciones enviadas desde /contacto.html. Para asignar un proyecto, el cliente primero debe crear su cuenta en el portal (login.html) — luego búscalo por correo en la pestaña "Proyectos".</p>
-        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-          <table class="admin-table">
-            <thead>
-              <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Tipo</th><th>Descripción</th><th>Presupuesto</th><th>Plazo</th></tr>
-            </thead>
-            <tbody id="leads-table-body"></tbody>
-          </table>
+    <!-- ============ CONTENIDO ============ -->
+    <div class="flex-1 min-w-0 flex flex-col">
+
+      <!-- Header superior: móvil (logo+salir) y escritorio (título de la pestaña activa) -->
+      <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+        <div class="flex h-20 items-center justify-between px-5 sm:px-6 lg:px-10">
+          <div class="flex items-center gap-2.5 lg:hidden">
+            <img src="assets/img/logo-icon.svg" alt="OCA Holding Group LLC" class="h-8 w-8">
+            <span class="font-serif text-base font-semibold text-navy">Panel Admin</span>
+          </div>
+          <h1 data-admin-panel-title class="hidden lg:block font-serif text-xl font-semibold text-navy">Solicitudes de Cotización</h1>
+          <button type="button" id="sign-out-button-mobile" class="lg:hidden rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-navy hover:border-navy transition-colors">Cerrar sesión</button>
         </div>
-      </section>
-
-      <!-- ============ PROYECTOS ============ -->
-      <section data-admin-panel="projects" class="hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div class="lg:col-span-2">
-            <h2 class="font-serif text-lg font-semibold text-navy mb-4">Proyectos activos</h2>
-            <div id="projects-list" class="space-y-4"></div>
-          </div>
-          <div>
-            <div class="rounded-xl border border-slate-200 bg-white p-6 sticky top-24">
-              <h3 class="font-serif text-base font-semibold text-navy mb-4">Nuevo proyecto</h3>
-              <form id="new-project-form" class="space-y-4">
-                <div>
-                  <label class="block text-xs font-medium text-navy mb-1">Correo del cliente (debe tener cuenta ya creada)</label>
-                  <input type="email" name="clientEmail" required placeholder="cliente@empresa.com" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-navy mb-1">Título del proyecto</label>
-                  <input type="text" name="title" required placeholder="Ej. Tienda en línea — Artesanías del Valle" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-navy mb-1">Tipo</label>
-                  <select name="projectType" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
-                    <option value="website">Sitio web</option>
-                    <option value="webapp">Aplicación web</option>
-                    <option value="mobileapp">Aplicación móvil</option>
-                    <option value="ecommerce">E-commerce</option>
-                    <option value="software">Software a medida</option>
-                    <option value="branding">Branding</option>
-                    <option value="other">Otro</option>
-                  </select>
-                </div>
-                <button type="submit" data-submit-button class="w-full rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors">Crear proyecto</button>
-              </form>
-            </div>
-          </div>
+        <!-- Pestañas móviles (sidebar oculta en pantallas chicas) -->
+        <div class="lg:hidden overflow-x-auto px-5 pb-3 flex gap-2">
+          <button type="button" data-admin-tab="leads" class="admin-tab-mobile">Solicitudes</button>
+          <button type="button" data-admin-tab="projects" class="admin-tab-mobile">Proyectos</button>
+          <button type="button" data-admin-tab="invoices" class="admin-tab-mobile">Facturas</button>
+          <button type="button" data-admin-tab="retainers" class="admin-tab-mobile">Retainers</button>
         </div>
-      </section>
+      </header>
 
-      <!-- ============ FACTURAS ============ -->
-      <section data-admin-panel="invoices" class="hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div class="lg:col-span-2">
-            <h2 class="font-serif text-lg font-semibold text-navy mb-4">Facturas</h2>
-            <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-              <table class="admin-table">
-                <thead>
-                  <tr><th>Fecha</th><th>Proyecto</th><th>Descripción</th><th>Monto</th><th>Estado</th></tr>
-                </thead>
-                <tbody id="invoices-table-body"></tbody>
-              </table>
-            </div>
-          </div>
-          <div>
-            <div class="rounded-xl border border-slate-200 bg-white p-6 sticky top-24">
-              <h3 class="font-serif text-base font-semibold text-navy mb-4">Nueva factura</h3>
-              <form id="new-invoice-form" class="space-y-4">
-                <div>
-                  <label class="block text-xs font-medium text-navy mb-1">Proyecto</label>
-                  <select name="projectId" id="invoice-project-select" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold"></select>
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-navy mb-1">Descripción</label>
-                  <input type="text" name="description" required placeholder="Ej. Anticipo 50% — Desarrollo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-navy mb-1">Monto (USD)</label>
-                  <input type="number" name="amount" required min="1" step="0.01" placeholder="1500.00" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
-                </div>
-                <button type="submit" data-submit-button class="w-full rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors">Crear factura</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
+      <main class="flex-1 p-5 sm:p-6 lg:p-10">
+        <div id="admin-message" class="hidden rounded-lg p-4 text-sm mb-6"></div>
 
-      <!-- ============ RETAINERS (mantenimiento recurrente) ============ -->
-      <section data-admin-panel="retainers" class="hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div class="lg:col-span-2">
-            <h2 class="font-serif text-lg font-semibold text-navy mb-4">Retainers</h2>
-            <p class="text-sm text-slate-500 mb-6">Cobro recurrente automático (ej. mantenimiento mensual). El cliente lo activa desde su panel — aquí solo lo creas como "pendiente"; Stripe lo marca "activo" cuando el cliente paga la primera cobranza.</p>
-            <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-              <table class="admin-table">
-                <thead>
-                  <tr><th>Fecha</th><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estado</th></tr>
-                </thead>
-                <tbody id="retainers-table-body"></tbody>
-              </table>
+        <!-- ============ LEADS (solicitudes de cotización) ============ -->
+        <section data-admin-panel="leads" class="hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-leads-total">—</div>
+              <div class="stat-label">Solicitudes totales</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-leads-week">—</div>
+              <div class="stat-label">Últimos 7 días</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-leads-type">—</div>
+              <div class="stat-label">Tipo más pedido</div>
             </div>
           </div>
-          <div>
-            <div class="rounded-xl border border-slate-200 bg-white p-6 sticky top-24">
-              <h3 class="font-serif text-base font-semibold text-navy mb-4">Nuevo retainer</h3>
-              <form id="new-retainer-form" class="space-y-4">
-                <div>
-                  <label class="block text-xs font-medium text-navy mb-1">Correo del cliente (debe tener cuenta ya creada)</label>
-                  <input type="email" name="clientEmail" required placeholder="cliente@empresa.com" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
-                </div>
-                <div>
-                  <label class="block text-xs font-medium text-navy mb-1">Descripción</label>
-                  <input type="text" name="description" required placeholder="Ej. Mantenimiento mensual" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
+          <p class="text-sm text-slate-500 mb-5">Cotizaciones enviadas desde /contacto.html. Para asignar un proyecto, el cliente primero debe crear su cuenta en el portal (login.html) — luego búscalo por correo en la pestaña "Proyectos".</p>
+          <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <table class="admin-table">
+              <thead>
+                <tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Tipo</th><th>Descripción</th><th>Presupuesto</th><th>Plazo</th></tr>
+              </thead>
+              <tbody id="leads-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ============ PROYECTOS ============ -->
+        <section data-admin-panel="projects" class="hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-projects-total">—</div>
+              <div class="stat-label">Proyectos totales</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-projects-active">—</div>
+              <div class="stat-label">En curso</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-projects-delivered">—</div>
+              <div class="stat-label">Entregados</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+              <h2 class="font-serif text-lg font-semibold text-navy mb-4">Proyectos activos</h2>
+              <div id="projects-list" class="space-y-4"></div>
+            </div>
+            <div>
+              <div class="rounded-2xl border border-slate-200 bg-white p-6 sticky top-28">
+                <h3 class="font-serif text-base font-semibold text-navy mb-4">Nuevo proyecto</h3>
+                <form id="new-project-form" class="space-y-4">
                   <div>
-                    <label class="block text-xs font-medium text-navy mb-1">Monto (USD)</label>
-                    <input type="number" name="amount" required min="1" step="0.01" placeholder="50.00" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                    <label class="block text-xs font-medium text-navy mb-1">Correo del cliente (debe tener cuenta ya creada)</label>
+                    <input type="email" name="clientEmail" required placeholder="cliente@empresa.com" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-navy mb-1">Frecuencia</label>
-                    <select name="billingInterval" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
-                      <option value="month">Mensual</option>
-                      <option value="year">Anual</option>
+                    <label class="block text-xs font-medium text-navy mb-1">Título del proyecto</label>
+                    <input type="text" name="title" required placeholder="Ej. Tienda en línea — Artesanías del Valle" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-navy mb-1">Tipo</label>
+                    <select name="projectType" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                      <option value="website">Sitio web</option>
+                      <option value="webapp">Aplicación web</option>
+                      <option value="mobileapp">Aplicación móvil</option>
+                      <option value="ecommerce">E-commerce</option>
+                      <option value="software">Software a medida</option>
+                      <option value="branding">Branding</option>
+                      <option value="other">Otro</option>
                     </select>
                   </div>
-                </div>
-                <button type="submit" data-submit-button class="w-full rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors">Crear retainer</button>
-              </form>
+                  <button type="submit" data-submit-button class="w-full rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors">Crear proyecto</button>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
+        <!-- ============ FACTURAS ============ -->
+        <section data-admin-panel="invoices" class="hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-invoices-paid">—</div>
+              <div class="stat-label">Cobrado (pagadas)</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-invoices-pending">—</div>
+              <div class="stat-label">Pendiente de cobro</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-invoices-count">—</div>
+              <div class="stat-label">Facturas totales</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+              <h2 class="font-serif text-lg font-semibold text-navy mb-4">Facturas</h2>
+              <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                <table class="admin-table">
+                  <thead>
+                    <tr><th>Fecha</th><th>Proyecto</th><th>Descripción</th><th>Monto</th><th>Estado</th></tr>
+                  </thead>
+                  <tbody id="invoices-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <div class="rounded-2xl border border-slate-200 bg-white p-6 sticky top-28">
+                <h3 class="font-serif text-base font-semibold text-navy mb-4">Nueva factura</h3>
+                <form id="new-invoice-form" class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-medium text-navy mb-1">Proyecto</label>
+                    <select name="projectId" id="invoice-project-select" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold"></select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-navy mb-1">Descripción</label>
+                    <input type="text" name="description" required placeholder="Ej. Anticipo 50% — Desarrollo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-navy mb-1">Monto (USD)</label>
+                    <input type="number" name="amount" required min="1" step="0.01" placeholder="1500.00" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                  </div>
+                  <button type="submit" data-submit-button class="w-full rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors">Crear factura</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ RETAINERS (mantenimiento recurrente) ============ -->
+        <section data-admin-panel="retainers" class="hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-retainers-mrr">—</div>
+              <div class="stat-label">Ingreso recurrente mensual</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-retainers-active">—</div>
+              <div class="stat-label">Activos</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-retainers-pending">—</div>
+              <div class="stat-label">Pendientes de activar</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+              <h2 class="font-serif text-lg font-semibold text-navy mb-4">Retainers</h2>
+              <p class="text-sm text-slate-500 mb-5">Cobro recurrente automático (ej. mantenimiento mensual). El cliente lo activa desde su panel — aquí solo lo creas como "pendiente"; Stripe lo marca "activo" cuando el cliente paga la primera cobranza.</p>
+              <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                <table class="admin-table">
+                  <thead>
+                    <tr><th>Fecha</th><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estado</th></tr>
+                  </thead>
+                  <tbody id="retainers-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <div class="rounded-2xl border border-slate-200 bg-white p-6 sticky top-28">
+                <h3 class="font-serif text-base font-semibold text-navy mb-4">Nuevo retainer</h3>
+                <form id="new-retainer-form" class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-medium text-navy mb-1">Correo del cliente (debe tener cuenta ya creada)</label>
+                    <input type="email" name="clientEmail" required placeholder="cliente@empresa.com" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-navy mb-1">Descripción</label>
+                    <input type="text" name="description" required placeholder="Ej. Mantenimiento mensual" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-medium text-navy mb-1">Monto (USD)</label>
+                      <input type="number" name="amount" required min="1" step="0.01" placeholder="50.00" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium text-navy mb-1">Frecuencia</label>
+                      <select name="billingInterval" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold">
+                        <option value="month">Mensual</option>
+                        <option value="year">Anual</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button type="submit" data-submit-button class="w-full rounded-full bg-navy px-6 py-2.5 text-sm font-semibold text-white hover:bg-navy-light transition-colors">Crear retainer</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
     </div>
-  </main>
+  </div>
 
   <!-- Plantilla para publicar un avance de proyecto (rellenada por admin.js) -->
   <template id="update-form-template">

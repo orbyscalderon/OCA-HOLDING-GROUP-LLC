@@ -69,12 +69,21 @@
     setTimeout(() => box.classList.add("hidden"), 5000);
   }
 
+  const PANEL_TITLES = {
+    leads: "Solicitudes de Cotización",
+    projects: "Proyectos",
+    invoices: "Facturas",
+    retainers: "Retainers"
+  };
+
   function initTabs() {
     const tabs = document.querySelectorAll("[data-admin-tab]");
     const panels = document.querySelectorAll("[data-admin-panel]");
+    const title = document.querySelector("[data-admin-panel-title]");
     function activate(name) {
       tabs.forEach((btn) => btn.classList.toggle("is-active", btn.getAttribute("data-admin-tab") === name));
       panels.forEach((panel) => panel.classList.toggle("hidden", panel.getAttribute("data-admin-panel") !== name));
+      if (title) title.textContent = PANEL_TITLES[name] || "";
     }
     tabs.forEach((btn) => btn.addEventListener("click", () => activate(btn.getAttribute("data-admin-tab"))));
     activate("leads");
@@ -92,9 +101,24 @@
       return;
     }
 
+    const statTotal = document.getElementById("stat-leads-total");
+    const statWeek = document.getElementById("stat-leads-week");
+    const statType = document.getElementById("stat-leads-type");
+    if (statTotal) statTotal.textContent = data.length;
+    if (statWeek) {
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      statWeek.textContent = data.filter((l) => new Date(l.created_at).getTime() >= weekAgo).length;
+    }
+    if (statType) {
+      const counts = {};
+      data.forEach((l) => { if (l.project_type) counts[l.project_type] = (counts[l.project_type] || 0) + 1; });
+      const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+      statType.textContent = top ? PROJECT_TYPE_LABELS[top] || top : "—";
+    }
+
     const tbody = document.getElementById("leads-table-body");
     if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-slate-400">Aún no hay solicitudes de cotización.</td></tr>`;
+      tbody.innerHTML = emptyStateRow(7, "Aún no hay solicitudes de cotización.");
       return;
     }
 
@@ -130,9 +154,19 @@
   }
 
   function renderProjectsList(supabaseClient, projects) {
+    const statTotal = document.getElementById("stat-projects-total");
+    const statActive = document.getElementById("stat-projects-active");
+    const statDelivered = document.getElementById("stat-projects-delivered");
+    if (statTotal) statTotal.textContent = projects.length;
+    if (statActive) statActive.textContent = projects.filter((p) => p.status !== "delivered" && p.status !== "on_hold").length;
+    if (statDelivered) statDelivered.textContent = projects.filter((p) => p.status === "delivered").length;
+
     const list = document.getElementById("projects-list");
     if (!projects.length) {
-      list.innerHTML = `<p class="text-sm text-slate-400 rounded-lg border border-slate-200 bg-white p-6">Aún no hay proyectos. Crea el primero desde el formulario de la derecha.</p>`;
+      list.innerHTML = `<div class="admin-empty-state rounded-2xl border border-slate-200 bg-white">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5a1.5 1.5 0 011.5-1.5h4.19a1.5 1.5 0 011.06.44l1.5 1.5a1.5 1.5 0 001.06.44H19.5a1.5 1.5 0 011.5 1.5v8.62a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18.5v-11z"/></svg>
+        <span>Aún no hay proyectos. Crea el primero desde el formulario de la derecha.</span>
+      </div>`;
       return;
     }
 
@@ -227,9 +261,22 @@
       return;
     }
 
+    const statPaid = document.getElementById("stat-invoices-paid");
+    const statPending = document.getElementById("stat-invoices-pending");
+    const statCount = document.getElementById("stat-invoices-count");
+    if (statCount) statCount.textContent = data.length;
+    if (statPaid) {
+      const total = data.filter((i) => i.status === "paid").reduce((sum, i) => sum + i.amount_cents, 0);
+      statPaid.textContent = formatMoney(total, "usd");
+    }
+    if (statPending) {
+      const total = data.filter((i) => i.status === "pending").reduce((sum, i) => sum + i.amount_cents, 0);
+      statPending.textContent = formatMoney(total, "usd");
+    }
+
     const tbody = document.getElementById("invoices-table-body");
     if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-slate-400">Aún no hay facturas.</td></tr>`;
+      tbody.innerHTML = emptyStateRow(5, "Aún no hay facturas.");
       return;
     }
 
@@ -241,7 +288,7 @@
         <td>${escapeHtml((inv.projects && inv.projects.title) || "-")}</td>
         <td>${escapeHtml(inv.description)}</td>
         <td class="whitespace-nowrap font-semibold text-navy">${formatMoney(inv.amount_cents, inv.currency)}</td>
-        <td><span class="status-pill bg-slate-100 text-slate-600">${INVOICE_STATUS_LABELS[inv.status] || inv.status}</span></td>
+        <td><span class="status-pill status-${inv.status}">${INVOICE_STATUS_LABELS[inv.status] || inv.status}</span></td>
       </tr>`
       )
       .join("");
@@ -258,9 +305,20 @@
       return;
     }
 
+    const statMrr = document.getElementById("stat-retainers-mrr");
+    const statActive = document.getElementById("stat-retainers-active");
+    const statPending = document.getElementById("stat-retainers-pending");
+    const activeRetainers = data.filter((r) => r.status === "active");
+    if (statActive) statActive.textContent = activeRetainers.length;
+    if (statPending) statPending.textContent = data.filter((r) => r.status === "pending").length;
+    if (statMrr) {
+      const mrrCents = activeRetainers.reduce((sum, r) => sum + (r.billing_interval === "year" ? r.amount_cents / 12 : r.amount_cents), 0);
+      statMrr.textContent = formatMoney(Math.round(mrrCents), "usd");
+    }
+
     const tbody = document.getElementById("retainers-table-body");
     if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-slate-400">Aún no hay retainers.</td></tr>`;
+      tbody.innerHTML = emptyStateRow(5, "Aún no hay retainers.");
       return;
     }
 
@@ -272,7 +330,7 @@
         <td>${escapeHtml((r.profiles && (r.profiles.full_name || r.profiles.email)) || "-")}</td>
         <td>${escapeHtml(r.description)}</td>
         <td class="whitespace-nowrap font-semibold text-navy">${formatMoney(r.amount_cents, r.currency)} / ${r.billing_interval === "year" ? "año" : "mes"}</td>
-        <td><span class="status-pill bg-slate-100 text-slate-600">${RETAINER_STATUS_LABELS[r.status] || r.status}</span></td>
+        <td><span class="status-pill status-${r.status}">${RETAINER_STATUS_LABELS[r.status] || r.status}</span></td>
       </tr>`
       )
       .join("");
@@ -381,10 +439,20 @@
   }
 
   function initSignOut(supabaseClient) {
-    document.getElementById("sign-out-button").addEventListener("click", async () => {
+    const handler = async () => {
       if (supabaseClient) await supabaseClient.auth.signOut();
       window.location.href = "login.html";
-    });
+    };
+    document.getElementById("sign-out-button").addEventListener("click", handler);
+    const mobileBtn = document.getElementById("sign-out-button-mobile");
+    if (mobileBtn) mobileBtn.addEventListener("click", handler);
+  }
+
+  function emptyStateRow(colspan, message) {
+    return `<tr class="admin-empty-row"><td colspan="${colspan}"><div class="admin-empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 13.5h3.75M9 10.5h6M3.75 18.75h16.5A1.5 1.5 0 0021.75 17.25V6.75a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5v10.5a1.5 1.5 0 001.5 1.5z"/></svg>
+      <span>${escapeHtml(message)}</span>
+    </div></td></tr>`;
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
