@@ -150,6 +150,13 @@
   // initAuthStateListener lo completa con session.user.email.
   let pendingRecoveryEmail = null;
 
+  // true mientras el formulario de "nueva contraseña" esté en pantalla —
+  // por cualquiera de los dos caminos (link del correo o código). Se usa
+  // para que initAuthStateListener NO redirija al panel cuando el propio
+  // setSession() de verifyOtp dispara su evento de sesión: a diferencia de
+  // chequear la URL (que solo marca el camino del link), esto cubre ambos.
+  let inPasswordRecoveryFlow = false;
+
   function initForgotPassword(supabaseClient) {
     const link = document.getElementById("forgot-password-link");
     if (!link) return;
@@ -177,6 +184,7 @@
   // también si el visitante igual le da clic al link (evento
   // PASSWORD_RECOVERY, ver initAuthStateListener).
   function showResetPasswordForm() {
+    inPasswordRecoveryFlow = true;
     const tabs = document.querySelector(".flex.rounded-full.bg-paper");
     const signinForm = document.getElementById("signin-form");
     const signupForm = document.getElementById("signup-form");
@@ -305,12 +313,13 @@
   // contraseña" — ambos casos crean una sesión, pero requieren manejo distinto.
   function initAuthStateListener(supabaseClient) {
     if (!supabaseClient) return;
-    // Supabase dispara INITIAL_SESSION (a veces antes que PASSWORD_RECOVERY)
-    // apenas detecta una sesión en la URL — incluida la sesión temporal que
-    // crea un link de recuperación. Sin este chequeo, esa sesión temporal
-    // dispara el redirect normal (admin/dashboard) antes de que el usuario
-    // llegue a ver el formulario de nueva contraseña.
-    const isRecoveryFlow = window.location.hash.indexOf("type=recovery") !== -1;
+    // Semilla inicial por si el link del correo todavía trae el hash de
+    // recuperación en la URL (INITIAL_SESSION puede disparar antes que
+    // PASSWORD_RECOVERY) — showResetPasswordForm() la vuelve a fijar en
+    // cuanto corre, así que esto solo cubre ese primer instante.
+    if (window.location.hash.indexOf("type=recovery") !== -1) {
+      inPasswordRecoveryFlow = true;
+    }
     supabaseClient.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         // El formulario ahora se autentica con el código de 6 dígitos
@@ -324,7 +333,13 @@
         showResetPasswordForm();
         return;
       }
-      if (isRecoveryFlow) return;
+      // inPasswordRecoveryFlow sigue en true mientras el formulario de
+      // nueva contraseña esté visible — incluido el instante en que
+      // initResetPasswordForm llama a setSession() con los tokens del
+      // código verificado, que dispara este mismo listener con SIGNED_IN.
+      // Sin este chequeo, ese evento redirige al panel antes de que
+      // updateUser() alcance a cambiar la contraseña.
+      if (inPasswordRecoveryFlow) return;
       if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
         redirectAfterAuth(supabaseClient, session);
       }
