@@ -204,7 +204,7 @@
       // Autentica con el código de 6 dígitos (no con el link) — esto es lo
       // que evita el problema de escáneres de correo "pre-visitando" el
       // link y dejando el token ya usado antes de que el usuario lo abra.
-      const { error: verifyError } = await supabaseClient.auth.verifyOtp({
+      const { data: verifyData, error: verifyError } = await supabaseClient.auth.verifyOtp({
         email: pendingRecoveryEmail,
         token: form.code.value.trim(),
         type: "recovery"
@@ -213,6 +213,18 @@
         setSubmitting(form, false);
         showMessage(messageBox, t("login.errorInvalidCode"), "error");
         return;
+      }
+
+      // Fija la sesión explícitamente con los tokens que acaba de devolver
+      // verifyOtp, en vez de confiar en que el cliente ya la haya guardado
+      // internamente — algunos navegadores (con almacenamiento bloqueado o
+      // particionado) no la tienen lista todavía cuando updateUser la pide,
+      // y eso es lo que causaba "Auth session missing!" al guardar.
+      if (verifyData && verifyData.session) {
+        await supabaseClient.auth.setSession({
+          access_token: verifyData.session.access_token,
+          refresh_token: verifyData.session.refresh_token
+        });
       }
 
       const { error } = await supabaseClient.auth.updateUser({ password: form.newPassword.value });
