@@ -201,19 +201,16 @@
           <h3 class="font-serif-display text-xl font-semibold text-[var(--oca-navy)] mb-1">${content.name}</h3>
           <p class="text-sm font-medium text-[var(--oca-gold)] mb-3">${content.tagline}</p>
           <p class="text-sm text-slate-600 leading-relaxed mb-6 flex-1">${content.description}</p>
-          <button type="button" class="oca-view-details mt-auto inline-flex items-center gap-2 text-sm font-semibold text-[var(--oca-navy)] hover:text-[var(--oca-gold)] transition-colors" data-service-id="${service.id}">
+          <a href="${service.slug}.html" class="oca-view-details mt-auto inline-flex items-center gap-2 text-sm font-semibold text-[var(--oca-navy)] hover:text-[var(--oca-gold)] transition-colors">
             ${dict.viewDetails}
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 9H3a1 1 0 110-2h9.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-          </button>
+          </a>
         </article>`;
       })
       .join("");
 
     grids.forEach((grid) => {
       grid.innerHTML = html;
-      grid.querySelectorAll(".oca-view-details").forEach((btn) => {
-        btn.addEventListener("click", () => openCompanyModal(parseInt(btn.getAttribute("data-service-id"), 10)));
-      });
     });
 
     initScrollReveal();
