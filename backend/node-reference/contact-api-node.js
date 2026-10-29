@@ -25,7 +25,7 @@ require("dotenv").config();
 const app = express();
 // Restringido al dominio del sitio — sin esto, cualquier página en internet
 // podría llamar a esta API desde el navegador de un visitante.
-app.use(cors({ origin: process.env.SITE_URL || "https://www.ocaholdinggroup.com", methods: ["GET", "POST"] }));
+app.use(cors({ origin: process.env.SITE_URL || "https://ocaholdinggroup.com", methods: ["GET", "POST"] }));
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -232,7 +232,7 @@ app.post("/api/create-checkout-session", checkoutLimiter, async (req, res) => {
     const { data: userData } = await supabase.auth.admin.getUserById(invoice.client_id);
     const clientEmail = userData && userData.user ? userData.user.email : undefined;
 
-    const siteUrl = process.env.SITE_URL || "https://www.ocaholdinggroup.com";
+    const siteUrl = process.env.SITE_URL || "https://ocaholdinggroup.com";
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
