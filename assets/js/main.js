@@ -25,7 +25,24 @@
    * 1. I18N ENGINE
    * ----------------------------------------------------------- */
 
+  // ?lang=es|en en la URL manda sobre lo guardado — así los links con
+  // hreflang (ver <head>) realmente cargan en ese idioma en vez de
+  // depender de localStorage, que Google no puede "recordar" al rastrear.
+  function getLangFromUrl() {
+    try {
+      const param = new URLSearchParams(window.location.search).get("lang");
+      return param === "es" || param === "en" ? param : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function getCurrentLang() {
+    const fromUrl = getLangFromUrl();
+    if (fromUrl) {
+      setCurrentLang(fromUrl);
+      return fromUrl;
+    }
     return localStorage.getItem(LANG_STORAGE_KEY) || DEFAULT_LANG;
   }
 

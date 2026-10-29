@@ -39,14 +39,14 @@ const OCA_DATA = {
       es: {
         name: "Aplicaciones Web",
         tagline: "Herramientas a medida para tu operación",
-        description: "Plataformas web interactivas — paneles de control, portales de clientes, sistemas internos — construidas para resolver procesos específicos de tu negocio.",
-        keyFeatures: "Autenticación de usuarios · Datos en tiempo real · Integraciones con terceros · Paneles administrativos"
+        description: "Plataformas web interactivas — paneles de control, portales de clientes, sistemas internos — construidas por un equipo de desarrolladores full stack para resolver procesos específicos de tu negocio.",
+        keyFeatures: "Desarrollo full stack: frontend y backend · Autenticación de usuarios · Datos en tiempo real · Integraciones con terceros · Paneles administrativos"
       },
       en: {
         name: "Web Applications",
         tagline: "Custom tools built for your operation",
-        description: "Interactive web platforms — dashboards, client portals, internal systems — built to solve the specific processes your business runs on.",
-        keyFeatures: "User authentication · Real-time data · Third-party integrations · Admin dashboards"
+        description: "Interactive web platforms — dashboards, client portals, internal systems — built by a full stack development team to solve the specific processes your business runs on.",
+        keyFeatures: "Full stack development: frontend and backend · User authentication · Real-time data · Third-party integrations · Admin dashboards"
       }
     },
     {
@@ -93,14 +93,14 @@ const OCA_DATA = {
       es: {
         name: "Software a Medida",
         tagline: "Cuando una plantilla no alcanza",
-        description: "Desarrollo de software personalizado para automatizar procesos, integrar sistemas o construir el producto digital que tu negocio necesita desde cero.",
-        keyFeatures: "Arquitectura a medida · Integraciones vía API · Automatización de procesos · Pensado para escalar"
+        description: "Desarrollo de software personalizado por desarrolladores full stack — frontend y backend — para automatizar procesos, integrar sistemas o construir el producto digital que tu negocio necesita desde cero.",
+        keyFeatures: "Desarrollador full stack dedicado · Arquitectura a medida · Integraciones vía API · Automatización de procesos · Pensado para escalar"
       },
       en: {
         name: "Custom Software",
         tagline: "When a template isn't enough",
-        description: "Custom software development to automate processes, integrate systems, or build the digital product your business needs from the ground up.",
-        keyFeatures: "Custom architecture · API integrations · Process automation · Built to scale"
+        description: "Custom software development by full stack developers — frontend and backend — to automate processes, integrate systems, or build the digital product your business needs from the ground up.",
+        keyFeatures: "Dedicated full stack developer · Custom architecture · API integrations · Process automation · Built to scale"
       }
     },
     {

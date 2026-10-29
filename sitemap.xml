@@ -4,42 +4,63 @@
 
   <url>
     <loc>https://ocaholdinggroup.com/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://ocaholdinggroup.com/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ocaholdinggroup.com/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ocaholdinggroup.com/"/>
     <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://ocaholdinggroup.com/nosotros.html</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://ocaholdinggroup.com/nosotros.html?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ocaholdinggroup.com/nosotros.html?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ocaholdinggroup.com/nosotros.html"/>
     <lastmod>2026-10-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ocaholdinggroup.com/portafolio.html</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://ocaholdinggroup.com/portafolio.html?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ocaholdinggroup.com/portafolio.html?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ocaholdinggroup.com/portafolio.html"/>
     <lastmod>2026-10-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ocaholdinggroup.com/noticias.html</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://ocaholdinggroup.com/noticias.html?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ocaholdinggroup.com/noticias.html?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ocaholdinggroup.com/noticias.html"/>
     <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://ocaholdinggroup.com/contacto.html</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://ocaholdinggroup.com/contacto.html?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ocaholdinggroup.com/contacto.html?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ocaholdinggroup.com/contacto.html"/>
     <lastmod>2026-10-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ocaholdinggroup.com/terminos.html</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://ocaholdinggroup.com/terminos.html?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ocaholdinggroup.com/terminos.html?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ocaholdinggroup.com/terminos.html"/>
     <lastmod>2026-10-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://ocaholdinggroup.com/privacidad.html</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://ocaholdinggroup.com/privacidad.html?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ocaholdinggroup.com/privacidad.html?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ocaholdinggroup.com/privacidad.html"/>
     <lastmod>2026-10-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
