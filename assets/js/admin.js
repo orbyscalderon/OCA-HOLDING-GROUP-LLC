@@ -428,6 +428,7 @@
                 ? ""
                 : `<div class="flex flex-wrap gap-2 pt-1">
               <button type="button" data-lead-action="save" class="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-navy hover:border-navy transition-colors">Guardar cambios</button>
+              <button type="button" data-lead-action="ai-proposal" class="rounded-full border border-gold/50 px-4 py-2 text-xs font-semibold text-[#8a6f1f] hover:border-gold transition-colors">Generar con IA ✨</button>
               <button type="button" data-lead-action="reject" class="rounded-full border border-red-200 px-4 py-2 text-xs font-semibold text-red-700 hover:border-red-400 transition-colors">Rechazar</button>
               ${
                 lead.status === "approved"
@@ -459,9 +460,35 @@
       }
 
       const saveBtn = form.querySelector('[data-lead-action="save"]');
+      const aiProposalBtn = form.querySelector('[data-lead-action="ai-proposal"]');
       const approveBtn = form.querySelector('[data-lead-action="approve"]');
       const rejectBtn = form.querySelector('[data-lead-action="reject"]');
       const submitBidBtn = form.querySelector('[data-lead-action="submit-bid"]');
+
+      if (aiProposalBtn) {
+        aiProposalBtn.addEventListener("click", async () => {
+          aiProposalBtn.disabled = true;
+          const originalText = aiProposalBtn.textContent;
+          aiProposalBtn.textContent = "Analizando proyecto…";
+          try {
+            const apiBase = window.OCA_API_BASE_URL || "";
+            const response = await fetch(apiBase + "/api/admin/freelancer/" + leadId + "/generate-ai-proposal", {
+              method: "POST",
+              headers: Object.assign({ "Content-Type": "application/json" }, await getAuthHeaders(supabaseClient))
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.detail || "ai_proposal_failed");
+            form.draftMessage.value = data.draft_message;
+            showMessage("Propuesta generada con IA. Revísala antes de aprobar.", "success");
+          } catch (err) {
+            console.error("ai-proposal error:", err);
+            showMessage("No se pudo generar la propuesta: " + err.message, "error");
+          } finally {
+            aiProposalBtn.disabled = false;
+            aiProposalBtn.textContent = originalText;
+          }
+        });
+      }
 
       if (saveBtn) {
         saveBtn.addEventListener("click", async () => {

@@ -22,6 +22,7 @@ import os
 import time
 from typing import Optional
 
+import anthropic
 import requests
 
 logger = logging.getLogger("oca_freelancer_client")
@@ -225,6 +226,79 @@ def build_lead_row(project: dict) -> dict:
         "draft_period_days": period_days,
         "draft_message": _draft_message(project, matched_service),
     }
+
+
+# ----------------------------------------------------------------------------
+# Propuesta con IA — bajo demanda, un proyecto a la vez (no en cada búsqueda,
+# que insertaría ~30 leads por corrida: generar con IA para todos sería lento
+# y costoso sin necesidad). El staff la pide desde el panel admin solo para
+# los proyectos que de verdad le interesan, con el botón "Generar con IA".
+# ----------------------------------------------------------------------------
+
+_AI_PROPOSAL_SYSTEM_PROMPT = """You write freelance project proposals for OCA Holding Group LLC, a \
+US-registered (Wyoming) software development studio that builds websites, web \
+applications, mobile apps, e-commerce stores, custom software, and branding/identity \
+work — frontend and backend, end to end.
+
+You will be given one real project brief from Freelancer.com. Write a short bid \
+proposal for it. Rules:
+- Actually read and respond to the specific brief — reference at least one or two \
+  concrete details from the description (a feature they asked for, a constraint, a \
+  technology they mentioned) to prove it was read, not skimmed.
+- Briefly state a concrete, plausible approach for THIS project — not generic claims.
+- State the proposed timeline using the given period in days, naturally in a sentence.
+- Confident, professional, warm tone. No flattery, no filler, no exclamation marks.
+- Do NOT invent specific past clients, project names, or portfolio pieces — OCA's \
+  track record may be mentioned only in general terms (e.g. "we build production-ready \
+  X") never as a fabricated specific case study.
+- Plain text only — no markdown, no bullet points, no headers.
+- 110-170 words.
+- End on its own line with exactly: — Orbys, OCA Holding Group LLC
+- Output ONLY the proposal text, nothing else — no preamble, no "Here's a proposal:"."""
+
+
+def generate_ai_proposal(project: dict, matched_service: Optional[str], amount: float, currency_code: Optional[str], period_days: int) -> str:
+    """Analiza el brief real del proyecto con Claude y redacta una propuesta
+    específica — a diferencia de _draft_message (heurística genérica usada
+    como borrador inicial al buscar), esto SÍ lee la descripción completa."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise FreelancerApiError("ANTHROPIC_API_KEY no está configurado")
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    budget = project.get("budget") or {}
+    user_content = (
+        f"Project title: {project.get('title', '(no title)')}\n"
+        f"Our matched service category: {matched_service or 'uncategorized'}\n"
+        f"Freelancer project type: {project.get('type', 'fixed')}\n"
+        f"Budget range: {budget.get('minimum', '?')}-{budget.get('maximum', '?')} {currency_code or ''}\n"
+        f"Skills/tags on the listing: {', '.join(job.get('name', '') for job in (project.get('jobs') or []))}\n"
+        f"Our planned bid: {amount} {currency_code or ''}, delivered in {period_days} days\n\n"
+        f"Full project description:\n{(project.get('description') or '').strip()}"
+    )
+
+    try:
+        response = client.messages.create(
+            model="claude-opus-5-5",
+            max_tokens=1024,
+            system=_AI_PROPOSAL_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": user_content}],
+        )
+    except anthropic.AuthenticationError as exc:
+        raise FreelancerApiError("ANTHROPIC_API_KEY inválida") from exc
+    except anthropic.RateLimitError as exc:
+        raise FreelancerApiError("Límite de uso de la API de Claude alcanzado, intenta de nuevo en un momento") from exc
+    except anthropic.APIStatusError as exc:
+        logger.error("Claude API error generating proposal: %s", exc)
+        raise FreelancerApiError(f"Error de la API de Claude: {exc.message}") from exc
+    except anthropic.APIConnectionError as exc:
+        raise FreelancerApiError("No se pudo conectar con la API de Claude") from exc
+
+    text = "".join(block.text for block in response.content if block.type == "text").strip()
+    if not text:
+        raise FreelancerApiError("Claude no devolvió texto de propuesta")
+    return text
 
 
 def place_bid(project_id: int, amount: float, period_days: int, description: str, milestone_percentage: int = 100) -> dict:

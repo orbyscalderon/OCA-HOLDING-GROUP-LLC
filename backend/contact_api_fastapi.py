@@ -602,6 +602,72 @@ async def search_freelancer_projects(request: Request, authorization: Optional[s
     return {"ok": True, "found": len(projects), "new_leads": len(new_rows)}
 
 
+@app.post("/api/admin/freelancer/{lead_id}/generate-ai-proposal")
+@limiter.limit("20/15minute")
+async def generate_freelancer_ai_proposal(
+    lead_id: str, request: Request, authorization: Optional[str] = Header(default=None)
+):
+    """
+    Pide a Claude que lea el brief completo del proyecto y redacte una
+    propuesta a medida (a diferencia del borrador heurístico genérico que
+    ya trae cada lead desde /search). Bajo demanda, un lead a la vez — el
+    staff lo pide solo para los proyectos que realmente le interesan.
+    Reemplaza draft_message; no toca el monto/plazo, que el staff puede
+    seguir editando por su cuenta.
+    """
+    user_id = get_authenticated_user_id(authorization)
+    assert_staff(user_id)
+
+    try:
+        result = (
+            supabase.table("freelancer_leads")
+            .select(
+                "id, title, description, matched_service, freelancer_project_type, "
+                "budget_min, budget_max, currency_code, skills, status, "
+                "draft_bid_amount, draft_period_days"
+            )
+            .eq("id", lead_id)
+            .single()
+            .execute()
+        )
+        lead = result.data
+    except Exception as exc:
+        if getattr(exc, "code", None) == "PGRST116":
+            raise HTTPException(status_code=404, detail="lead_not_found") from exc
+        logger.error("generate_freelancer_ai_proposal lookup error: %s", exc)
+        raise HTTPException(status_code=500, detail="internal_error") from exc
+
+    if not lead:
+        raise HTTPException(status_code=404, detail="lead_not_found")
+
+    if lead["status"] == "submitted":
+        raise HTTPException(status_code=400, detail="lead_already_submitted")
+
+    project_shape = {
+        "title": lead["title"],
+        "description": lead["description"],
+        "type": lead["freelancer_project_type"],
+        "jobs": [{"name": skill} for skill in (lead["skills"] or [])],
+        "budget": {"minimum": lead["budget_min"], "maximum": lead["budget_max"]},
+    }
+
+    try:
+        proposal_text = freelancer_client.generate_ai_proposal(
+            project=project_shape,
+            matched_service=lead["matched_service"],
+            amount=lead["draft_bid_amount"] or 0,
+            currency_code=lead["currency_code"],
+            period_days=lead["draft_period_days"] or 14,
+        )
+    except freelancer_client.FreelancerApiError as exc:
+        logger.error("AI proposal generation failed for lead %s: %s", lead_id, exc)
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    supabase.table("freelancer_leads").update({"draft_message": proposal_text}).eq("id", lead_id).execute()
+
+    return {"ok": True, "draft_message": proposal_text}
+
+
 class SubmitBidPayload(BaseModel):
     lead_id: str = Field(alias="leadId")
 
