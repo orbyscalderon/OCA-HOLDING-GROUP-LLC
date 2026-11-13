@@ -41,6 +41,8 @@ from supabase import Client, create_client
 
 load_dotenv()
 
+import freelancer_client  # noqa: E402 — después de load_dotenv() a propósito
+
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_SERVICE_ROLE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 NOTIFY_TO_EMAIL = os.environ["NOTIFY_TO_EMAIL"]
@@ -113,6 +115,19 @@ def assert_owner_or_staff(user_id: str, resource_client_id: str) -> None:
     o si es staff interno (profiles.is_staff). Lanza 403 en caso contrario."""
     if user_id == resource_client_id:
         return
+    try:
+        profile = supabase.table("profiles").select("is_staff").eq("id", user_id).single().execute()
+        if profile.data and profile.data.get("is_staff"):
+            return
+    except Exception:  # noqa: BLE001 — si falla la verificación, no se concede acceso
+        pass
+    raise HTTPException(status_code=403, detail="forbidden")
+
+
+def assert_staff(user_id: str) -> None:
+    """A diferencia de assert_owner_or_staff, aquí NO hay dueño del recurso
+    posible — todo lo relacionado a Freelancer.com es 100% interno, así
+    que solo el staff (profiles.is_staff) puede llamar estos endpoints."""
     try:
         profile = supabase.table("profiles").select("is_staff").eq("id", user_id).single().execute()
         if profile.data and profile.data.get("is_staff"):
@@ -550,6 +565,109 @@ async def cancel_subscription(
     ).eq("id", retainer["id"]).execute()
 
     return {"ok": True}
+
+
+@app.post("/api/admin/freelancer/search")
+@limiter.limit("10/15minute")
+async def search_freelancer_projects(request: Request, authorization: Optional[str] = Header(default=None)):
+    """
+    Busca proyectos activos en Freelancer.com dentro de nuestras categorías
+    de servicio y guarda los que todavía no teníamos en `freelancer_leads`,
+    cada uno con una propuesta borrador ya generada (ver freelancer_client.
+    build_lead_row). No envía ninguna oferta — eso solo pasa en
+    /api/admin/freelancer/{lead_id}/submit-bid, y solo si el staff lo aprobó.
+    """
+    user_id = get_authenticated_user_id(authorization)
+    assert_staff(user_id)
+
+    try:
+        projects = freelancer_client.search_projects(limit=30)
+    except freelancer_client.FreelancerApiError as exc:
+        logger.error("Freelancer search failed: %s", exc)
+        raise HTTPException(status_code=502, detail="freelancer_api_error") from exc
+
+    existing = (
+        supabase.table("freelancer_leads")
+        .select("freelancer_project_id")
+        .in_("freelancer_project_id", [p["id"] for p in projects])
+        .execute()
+    )
+    existing_ids = {row["freelancer_project_id"] for row in (existing.data or [])}
+
+    new_rows = [freelancer_client.build_lead_row(p) for p in projects if p["id"] not in existing_ids]
+
+    if new_rows:
+        supabase.table("freelancer_leads").insert(new_rows).execute()
+
+    return {"ok": True, "found": len(projects), "new_leads": len(new_rows)}
+
+
+class SubmitBidPayload(BaseModel):
+    lead_id: str = Field(alias="leadId")
+
+    class Config:
+        populate_by_name = True
+
+
+@app.post("/api/admin/freelancer/{lead_id}/submit-bid")
+@limiter.limit("20/15minute")
+async def submit_freelancer_bid(
+    lead_id: str, request: Request, authorization: Optional[str] = Header(default=None)
+):
+    """
+    Envía la oferta real a Freelancer.com para un lead ya aprobado por el
+    staff en el panel admin. El monto/plazo/mensaje son los que el staff
+    dejó guardados en `freelancer_leads` (draft_bid_amount/draft_period_days/
+    draft_message) — nunca se recalculan aquí, para que lo que se envía sea
+    exactamente lo que el staff revisó.
+    """
+    user_id = get_authenticated_user_id(authorization)
+    assert_staff(user_id)
+
+    try:
+        result = (
+            supabase.table("freelancer_leads")
+            .select("id, freelancer_project_id, status, draft_bid_amount, draft_period_days, draft_message")
+            .eq("id", lead_id)
+            .single()
+            .execute()
+        )
+        lead = result.data
+    except Exception as exc:
+        if getattr(exc, "code", None) == "PGRST116":
+            raise HTTPException(status_code=404, detail="lead_not_found") from exc
+        logger.error("submit_freelancer_bid lookup error: %s", exc)
+        raise HTTPException(status_code=500, detail="internal_error") from exc
+
+    if not lead:
+        raise HTTPException(status_code=404, detail="lead_not_found")
+
+    if lead["status"] != "approved":
+        raise HTTPException(status_code=400, detail="lead_not_approved")
+
+    if not lead["draft_bid_amount"] or not lead["draft_period_days"] or not lead["draft_message"]:
+        raise HTTPException(status_code=400, detail="incomplete_draft")
+
+    try:
+        bid = freelancer_client.place_bid(
+            project_id=lead["freelancer_project_id"],
+            amount=lead["draft_bid_amount"],
+            period_days=lead["draft_period_days"],
+            description=lead["draft_message"],
+        )
+    except freelancer_client.FreelancerApiError as exc:
+        logger.error("Freelancer bid submission failed for lead %s: %s", lead_id, exc)
+        raise HTTPException(status_code=502, detail="freelancer_api_error") from exc
+
+    supabase.table("freelancer_leads").update(
+        {
+            "status": "submitted",
+            "submitted_bid_id": bid.get("id"),
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+        }
+    ).eq("id", lead_id).execute()
+
+    return {"ok": True, "bid_id": bid.get("id")}
 
 
 @app.post("/api/stripe-webhook")

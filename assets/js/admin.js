@@ -39,6 +39,11 @@
     return window.__ocaSupabaseClient;
   }
 
+  async function getAuthHeaders(supabaseClient) {
+    const { data } = await supabaseClient.auth.getSession();
+    return data && data.session ? { Authorization: "Bearer " + data.session.access_token } : {};
+  }
+
   function escapeHtml(str) {
     const div = document.createElement("div");
     div.textContent = str == null ? "" : str;
@@ -69,11 +74,14 @@
     setTimeout(() => box.classList.add("hidden"), 5000);
   }
 
+  const FREELANCER_STATUS_LABELS = { new: "Nuevo", approved: "Aprobado", submitted: "Oferta enviada", rejected: "Rechazado" };
+
   const PANEL_TITLES = {
     leads: "Solicitudes de Cotización",
     projects: "Proyectos",
     invoices: "Facturas",
-    retainers: "Retainers"
+    retainers: "Retainers",
+    freelancer: "Freelancer"
   };
 
   function initTabs() {
@@ -336,6 +344,224 @@
       .join("");
   }
 
+  function formatBudgetRange(min, max, currency) {
+    const cur = currency || "USD";
+    if (min != null && max != null) return `${min.toLocaleString()}–${max.toLocaleString()} ${cur}`;
+    if (min != null) return `desde ${min.toLocaleString()} ${cur}`;
+    if (max != null) return `hasta ${max.toLocaleString()} ${cur}`;
+    return "—";
+  }
+
+  async function loadFreelancerLeads(supabaseClient) {
+    const { data, error } = await supabaseClient
+      .from("freelancer_leads")
+      .select("*")
+      .order("time_submitted", { ascending: false });
+
+    if (error) {
+      console.error("Error loading freelancer leads:", error);
+      return;
+    }
+
+    const statNew = document.getElementById("stat-freelancer-new");
+    const statApproved = document.getElementById("stat-freelancer-approved");
+    const statSubmitted = document.getElementById("stat-freelancer-submitted");
+    if (statNew) statNew.textContent = data.filter((l) => l.status === "new").length;
+    if (statApproved) statApproved.textContent = data.filter((l) => l.status === "approved").length;
+    if (statSubmitted) statSubmitted.textContent = data.filter((l) => l.status === "submitted").length;
+
+    renderFreelancerLeadsList(supabaseClient, data || []);
+  }
+
+  function renderFreelancerLeadsList(supabaseClient, leads) {
+    const list = document.getElementById("freelancer-leads-list");
+    if (!leads.length) {
+      list.innerHTML = `<div class="admin-empty-state rounded-2xl border border-slate-200 bg-white">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.4"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25M21 7.5v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>
+        <span>Aún no hay proyectos. Dale a "Buscar proyectos nuevos" para consultar Freelancer.com.</span>
+      </div>`;
+      return;
+    }
+
+    // Prioriza lo accionable: nuevos y aprobados primero, enviados/rechazados al final.
+    const order = { new: 0, approved: 1, submitted: 2, rejected: 3 };
+    const sorted = leads.slice().sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
+
+    list.innerHTML = sorted
+      .map((lead) => {
+        const readonly = lead.status === "submitted" || lead.status === "rejected";
+        const descriptionPreview = (lead.description || "").slice(0, 280);
+        const hasMore = (lead.description || "").length > 280;
+
+        return `
+        <article class="rounded-xl border border-slate-200 bg-white p-5" data-lead-id="${lead.id}">
+          <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+            <div class="min-w-0">
+              <a href="${escapeHtml(lead.project_url || "#")}" target="_blank" rel="noopener" class="font-serif text-base font-semibold text-navy hover:text-gold transition-colors">${escapeHtml(lead.title)}</a>
+              <p class="text-xs text-slate-500 mt-0.5">
+                ${PROJECT_TYPE_LABELS[lead.matched_service] || "Sin categoría"} ·
+                ${formatBudgetRange(lead.budget_min, lead.budget_max, lead.currency_code)} ·
+                ${lead.freelancer_project_type === "hourly" ? "Por hora" : "Precio fijo"} ·
+                ${lead.bid_count != null ? lead.bid_count + " ofertas" : "—"}
+              </p>
+            </div>
+            <span class="status-pill status-${lead.status}">${FREELANCER_STATUS_LABELS[lead.status] || lead.status}</span>
+          </div>
+          <p class="text-xs text-slate-500 mb-4">${escapeHtml(descriptionPreview)}${hasMore ? "…" : ""}</p>
+          <form class="freelancer-draft-form space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-navy mb-1">Monto de la oferta (${escapeHtml(lead.currency_code || "USD")})</label>
+                <input type="number" name="draftAmount" step="0.01" min="1" value="${lead.draft_bid_amount ?? ""}" ${readonly ? "disabled" : ""} class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold disabled:bg-slate-50 disabled:text-slate-400">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-navy mb-1">Plazo (días)</label>
+                <input type="number" name="draftPeriod" step="1" min="1" value="${lead.draft_period_days ?? ""}" ${readonly ? "disabled" : ""} class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold disabled:bg-slate-50 disabled:text-slate-400">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-navy mb-1">Mensaje de la propuesta</label>
+              <textarea name="draftMessage" rows="4" ${readonly ? "disabled" : ""} class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-gold disabled:bg-slate-50 disabled:text-slate-400">${escapeHtml(lead.draft_message || "")}</textarea>
+            </div>
+            ${
+              readonly
+                ? ""
+                : `<div class="flex flex-wrap gap-2 pt-1">
+              <button type="button" data-lead-action="save" class="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold text-navy hover:border-navy transition-colors">Guardar cambios</button>
+              <button type="button" data-lead-action="reject" class="rounded-full border border-red-200 px-4 py-2 text-xs font-semibold text-red-700 hover:border-red-400 transition-colors">Rechazar</button>
+              ${
+                lead.status === "approved"
+                  ? `<button type="button" data-lead-action="submit-bid" class="ml-auto rounded-full bg-gold px-5 py-2 text-xs font-semibold text-navy hover:bg-gold-light transition-colors">Enviar oferta a Freelancer →</button>`
+                  : `<button type="button" data-lead-action="approve" class="ml-auto rounded-full bg-navy px-5 py-2 text-xs font-semibold text-white hover:bg-navy-light transition-colors">Guardar y aprobar</button>`
+              }
+            </div>`
+            }
+          </form>
+        </article>`;
+      })
+      .join("");
+
+    wireFreelancerLeadActions(supabaseClient, list);
+  }
+
+  function wireFreelancerLeadActions(supabaseClient, list) {
+    list.querySelectorAll("[data-lead-id]").forEach((card) => {
+      const leadId = card.getAttribute("data-lead-id");
+      const form = card.querySelector(".freelancer-draft-form");
+      if (!form) return;
+
+      function readDraftFields() {
+        return {
+          draft_bid_amount: form.draftAmount.value ? parseFloat(form.draftAmount.value) : null,
+          draft_period_days: form.draftPeriod.value ? parseInt(form.draftPeriod.value, 10) : null,
+          draft_message: form.draftMessage.value.trim()
+        };
+      }
+
+      const saveBtn = form.querySelector('[data-lead-action="save"]');
+      const approveBtn = form.querySelector('[data-lead-action="approve"]');
+      const rejectBtn = form.querySelector('[data-lead-action="reject"]');
+      const submitBidBtn = form.querySelector('[data-lead-action="submit-bid"]');
+
+      if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+          saveBtn.disabled = true;
+          const { error } = await supabaseClient.from("freelancer_leads").update(readDraftFields()).eq("id", leadId);
+          saveBtn.disabled = false;
+          if (error) showMessage("No se pudo guardar: " + error.message, "error");
+          else showMessage("Cambios guardados.", "success");
+        });
+      }
+
+      if (approveBtn) {
+        approveBtn.addEventListener("click", async () => {
+          approveBtn.disabled = true;
+          const fields = readDraftFields();
+          if (!fields.draft_bid_amount || !fields.draft_period_days || !fields.draft_message) {
+            showMessage("Completa monto, plazo y mensaje antes de aprobar.", "error");
+            approveBtn.disabled = false;
+            return;
+          }
+          const { error } = await supabaseClient
+            .from("freelancer_leads")
+            .update(Object.assign({ status: "approved" }, fields))
+            .eq("id", leadId);
+          approveBtn.disabled = false;
+          if (error) {
+            showMessage("No se pudo aprobar: " + error.message, "error");
+          } else {
+            showMessage("Propuesta aprobada. Ya puedes enviarla a Freelancer.", "success");
+            loadFreelancerLeads(supabaseClient);
+          }
+        });
+      }
+
+      if (rejectBtn) {
+        rejectBtn.addEventListener("click", async () => {
+          rejectBtn.disabled = true;
+          const { error } = await supabaseClient.from("freelancer_leads").update({ status: "rejected" }).eq("id", leadId);
+          rejectBtn.disabled = false;
+          if (error) showMessage("No se pudo rechazar: " + error.message, "error");
+          else {
+            showMessage("Proyecto descartado.", "success");
+            loadFreelancerLeads(supabaseClient);
+          }
+        });
+      }
+
+      if (submitBidBtn) {
+        submitBidBtn.addEventListener("click", async () => {
+          if (!window.confirm("Esto envía la oferta REAL a Freelancer.com con los datos que ves aquí. ¿Confirmas?")) return;
+          submitBidBtn.disabled = true;
+          submitBidBtn.textContent = "Enviando…";
+          try {
+            const apiBase = window.OCA_API_BASE_URL || "";
+            const response = await fetch(apiBase + "/api/admin/freelancer/" + leadId + "/submit-bid", {
+              method: "POST",
+              headers: Object.assign({ "Content-Type": "application/json" }, await getAuthHeaders(supabaseClient))
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.detail || "submit_failed");
+            showMessage("Oferta enviada a Freelancer.", "success");
+            loadFreelancerLeads(supabaseClient);
+          } catch (err) {
+            console.error("submit-bid error:", err);
+            showMessage("No se pudo enviar la oferta: " + err.message, "error");
+            submitBidBtn.disabled = false;
+            submitBidBtn.textContent = "Enviar oferta a Freelancer →";
+          }
+        });
+      }
+    });
+  }
+
+  function initFreelancerSearchButton(supabaseClient) {
+    const btn = document.getElementById("freelancer-search-button");
+    if (!btn) return;
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = "Buscando…";
+      try {
+        const apiBase = window.OCA_API_BASE_URL || "";
+        const response = await fetch(apiBase + "/api/admin/freelancer/search", {
+          method: "POST",
+          headers: Object.assign({ "Content-Type": "application/json" }, await getAuthHeaders(supabaseClient))
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.detail || "search_failed");
+        showMessage(`Encontrados ${data.found}, ${data.new_leads} nuevos.`, "success");
+        loadFreelancerLeads(supabaseClient);
+      } catch (err) {
+        console.error("freelancer search error:", err);
+        showMessage("No se pudo buscar: " + err.message, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    });
+  }
+
   function initNewProjectForm(supabaseClient) {
     const form = document.getElementById("new-project-form");
     form.addEventListener("submit", async (e) => {
@@ -482,7 +708,14 @@
     initNewProjectForm(supabaseClient);
     initNewInvoiceForm(supabaseClient);
     initNewRetainerForm(supabaseClient);
+    initFreelancerSearchButton(supabaseClient);
 
-    await Promise.all([loadLeads(supabaseClient), loadProjects(supabaseClient), loadInvoices(supabaseClient), loadRetainers(supabaseClient)]);
+    await Promise.all([
+      loadLeads(supabaseClient),
+      loadProjects(supabaseClient),
+      loadInvoices(supabaseClient),
+      loadRetainers(supabaseClient),
+      loadFreelancerLeads(supabaseClient)
+    ]);
   });
 })();

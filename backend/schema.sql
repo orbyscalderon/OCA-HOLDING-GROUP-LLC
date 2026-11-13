@@ -376,3 +376,66 @@ create policy "Staff can update retainers except activating them"
   on retainers for update
   using (is_staff_user())
   with check (is_staff_user() and status <> 'active');
+
+-- ----------------------------------------------------------------------------
+-- 9. FREELANCER_LEADS — proyectos encontrados vía la API de Freelancer.com
+--    que coinciden con nuestros servicios, con una propuesta borrador
+--    auto-generada para revisión del staff antes de enviarla. Ninguna
+--    oferta se envía a Freelancer sin que el staff la marque 'approved'
+--    primero (ver /api/admin/freelancer/* en el backend).
+-- ----------------------------------------------------------------------------
+create table if not exists freelancer_leads (
+  id                      uuid primary key default gen_random_uuid(),
+  freelancer_project_id   bigint not null unique,
+  title                   text not null,
+  seo_url                 text,
+  project_url             text,
+  currency_code           text,
+  budget_min              numeric,
+  budget_max              numeric,
+  freelancer_project_type text check (freelancer_project_type is null or freelancer_project_type in ('fixed','hourly')),
+  matched_service         text check (
+                            matched_service is null or matched_service in (
+                              'website','webapp','mobileapp','ecommerce','software','branding'
+                            )
+                          ),
+  bid_count               integer,
+  skills                  text[],
+  description             text,
+  time_submitted          timestamptz,
+  status                  text not null default 'new' check (
+                            status in ('new','approved','submitted','rejected')
+                          ),
+  draft_bid_amount        numeric,
+  draft_period_days       integer,
+  draft_message           text,
+  submitted_bid_id        bigint,
+  submitted_at            timestamptz,
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now()
+);
+
+create index if not exists idx_freelancer_leads_status on freelancer_leads (status);
+create index if not exists idx_freelancer_leads_time_submitted on freelancer_leads (time_submitted desc);
+
+drop trigger if exists trg_freelancer_leads_updated_at on freelancer_leads;
+create trigger trg_freelancer_leads_updated_at
+  before update on freelancer_leads
+  for each row execute function set_updated_at();
+
+-- 100% interno — solo el staff lo ve, y desde el navegador el staff puede
+-- editar el borrador y aprobarlo, pero nunca marcarlo 'submitted'
+-- directamente (ese estado solo lo asigna el backend, con la service_role
+-- key, después de confirmar que la oferta realmente se envió a Freelancer).
+-- Tampoco hay política de INSERT para el navegador: las filas solo las crea
+-- el backend (service_role) al buscar proyectos nuevos.
+alter table freelancer_leads enable row level security;
+
+create policy "Staff can view freelancer leads"
+  on freelancer_leads for select
+  using (is_staff_user());
+
+create policy "Staff can update freelancer leads except marking them submitted"
+  on freelancer_leads for update
+  using (is_staff_user())
+  with check (is_staff_user() and status <> 'submitted');
