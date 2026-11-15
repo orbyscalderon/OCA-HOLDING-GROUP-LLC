@@ -587,7 +587,7 @@ async def search_freelancer_projects(request: Request, authorization: Optional[s
         projects = freelancer_client.search_projects(limit=30)
     except freelancer_client.FreelancerApiError as exc:
         logger.error("Freelancer search failed: %s", exc)
-        raise HTTPException(status_code=502, detail="freelancer_api_error") from exc
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     existing = (
         supabase.table("freelancer_leads")
@@ -726,7 +726,7 @@ async def submit_freelancer_bid(
         )
     except freelancer_client.FreelancerApiError as exc:
         logger.error("Freelancer bid submission failed for lead %s: %s", lead_id, exc)
-        raise HTTPException(status_code=502, detail="freelancer_api_error") from exc
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     supabase.table("freelancer_leads").update(
         {
