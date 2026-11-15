@@ -76,7 +76,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_methods=["POST"],
-    allow_headers=["Content-Type"],
+    # "Authorization" es necesario para todo endpoint que verifica el JWT de
+    # Supabase (get_authenticated_user_id) — sin esto el navegador bloquea la
+    # petición en el preflight OPTIONS antes de que llegue al servidor.
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
